@@ -1,0 +1,30 @@
+{
+  "name": "mine",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "watchify src/main.js -o js/bundle.js --verbose --debug"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^13.0.0",
+    "browserify-shim": "^3.8.12",
+    "three": "^0.73.2",
+    "voxel": "^0.5.0"
+  },
+  "browserify-shim": {
+    "three": "global:THREE"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "dependencies": {
+    "keycode": "^2.1.0",
+    "ndarray": "^1.0.18"
+  }
+}

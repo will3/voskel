@@ -1,10 +1,11 @@
 var ndarray = require('ndarray');
-var mesher = require('../monotone').mesher;
+var mesher = require('b-mesher');
 
-module.exports = function(object) {
+module.exports = function(object, textures) {
   "use strict";
-  
+
   var palette = [null, 0xffffff];
+
   var chunkSize = 16;
   var chunks = {};
   var offset = new THREE.Vector3();
@@ -27,12 +28,19 @@ module.exports = function(object) {
       obj.remove(chunk.mesh);
     }
 
-    var result = mesher(chunk.map.data, chunk.map.shape);
+    var result = mesher(chunk.map);
 
     var geometry = new THREE.Geometry();
-    var material = new THREE.MeshBasicMaterial({
-      vertexColors: true
-    });
+
+    var material = new THREE.MeshFaceMaterial();
+    material.materials.push(
+      new THREE.MeshBasicMaterial({
+        map: textures['default']
+      }),
+      new THREE.MeshBasicMaterial({
+        map: textures['grass']
+      })
+    );
 
     result.vertices.forEach(function(v) {
       var vertice = new THREE.Vector3(
@@ -41,10 +49,29 @@ module.exports = function(object) {
       geometry.vertices.push(vertice);
     });
 
-    result.faces.forEach(function(f) {
+    result.surfaces.forEach(function(surface) {
+      var f = surface.face;
+      var uv = surface.uv;
+      var t = f[4];
+
       var face = new THREE.Face3(f[0], f[1], f[2]);
-      face.color = new THREE.Color(palette[f[3]]);
       geometry.faces.push(face);
+      face.materialIndex = t - 1;
+      geometry.faceVertexUvs[0].push([
+        new THREE.Vector2().fromArray(uv[0]),
+        new THREE.Vector2().fromArray(uv[1]),
+        new THREE.Vector2().fromArray(uv[2])
+      ]);
+
+
+      face = new THREE.Face3(f[2], f[3], f[0]);
+      geometry.faces.push(face);
+      face.materialIndex = t - 1;
+      geometry.faceVertexUvs[0].push([
+        new THREE.Vector2().fromArray(uv[2]),
+        new THREE.Vector2().fromArray(uv[3]),
+        new THREE.Vector2().fromArray(uv[0])
+      ]);
     });
 
     geometry.computeFaceNormals();
@@ -77,7 +104,7 @@ module.exports = function(object) {
     if (chunk == null) {
       return undefined;
     }
-    return chunk.map.get(x - origin[0], y - origin[0], z - origin[0]);
+    return chunk.map.get(x - origin[0], y - origin[1], z - origin[2]);
   };
 
   function getOrigin(x, y, z) {
@@ -129,3 +156,5 @@ module.exports = function(object) {
     getAtCoord: getAtCoord
   };
 };
+
+module.exports.$inject = ['textures'];

@@ -1,10 +1,9 @@
 var THREE = require('three');
+
 var ndarray = require('ndarray');
 var b = require('./b');
 var blocks = require('./components/blocks');
 var character = require('./components/character');
-var a_player = require('./assemblies/a_player');
-var a_ground = require('./assemblies/a_ground');
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -87,54 +86,8 @@ function initPostprocessing() {
   effectComposer.addPass(ssaoPass);
 }
 
-
 var app = b();
-app.value('app', app);
-
-trackball = app.attach(camera, require('./components/trackball'));
-app.value('camera', camera);
-
-var events = app.use(require('./systems/events'));
-app.value('events', events);
-
-var physics = app.use(require('./systems/physics'));
-app.value('physics', physics);
-
-var input = app.use(require('./systems/input'));
-app.value('input', input);
-
-// Player
-var player0 = a_player(app);
-player0.object.position.set(0, 20, 0);
-scene.add(player0.object);
-
-// var player1 = a_player(app);
-// player1.object.position.set(0, -20, 0);
-// scene.add(player1.object);
-
-// var player2 = a_player(app);
-// player2.object.position.set(20, 0, 0);
-// scene.add(player2.object);
-
-// var player3 = a_player(app);
-// player3.object.position.set(-20, 0, 0);
-// scene.add(player3.object);
-
-// var player4 = a_player(app);
-// player4.object.position.set(0, 0, 20);
-// scene.add(player4.object);
-
-// var player5 = a_player(app);
-// player5.object.position.set(0, 0, -20);
-// scene.add(player5.object);
-
-var ground = a_ground(app, {
-  hasEditor: true,
-  camera: camera
-});
-scene.add(ground.object);
-physics.ground = ground.blocks;
-
+require('./scenario')(app, scene, camera);
 app.start();
 
 // Set up render loop

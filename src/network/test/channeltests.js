@@ -1,6 +1,7 @@
 var startServer = require('../server');
 var startClient = require('../client');
 var expect = require('chai').expect;
+var jsondiffpatch = require('jsondiffpatch');
 
 describe('Channel', function() {
   it('should connect', function(done) {
@@ -26,7 +27,8 @@ describe('Channel', function() {
 
     // Verify client receive state
     socket.on('state', function(value) {
-      expect(client.state).to.equal('foo');
+      var state = jsondiffpatch.patch(null, value.state);
+      expect(state).to.equal('foo');
       done();
     });
   });

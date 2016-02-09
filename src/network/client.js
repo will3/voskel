@@ -1,5 +1,6 @@
 var io = require('socket.io-client');
 var winston = require('winston');
+var jsondiffpatch = require('jsondiffpatch');
 
 module.exports = function(host) {
   "use strict";
@@ -11,7 +12,9 @@ module.exports = function(host) {
 
   socket.on('state', function(packet) {
     var ack = packet.ack;
-    state = packet.state;
+
+    jsondiffpatch.patch(state, packet.state);
+    
     socket.emit('state-ack', ack);
   });
 

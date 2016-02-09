@@ -12,7 +12,7 @@ module.exports = function(port) {
 
   io.on('connection', function(socket) {
     winston.log('info', 'a user connected');
-    clients[socket.id] = {
+    var client = {
       socket: socket,
       ack: 0,
       lastAck: 0,
@@ -27,6 +27,8 @@ module.exports = function(port) {
         return null;
       }
     };
+
+    clients[socket.id] = client;
 
     socket.on('state-ack', function(data) {
       client.lastAck = data;
@@ -48,19 +50,23 @@ module.exports = function(port) {
 
       var lastAckState = client.getLastAckState();
 
+      var diff = jsondiffpatch.diff(lastAckState, state);
+
       var packet = {
-        state: state,
+        state: diff,
         ack: client.ack
       };
 
+      // Increment ack
       client.ack++;
 
       // TODO emit diff from last ack state
       socket.emit('state', packet);
 
+      // Record sent packets
       client.sentPackets.push(packet);
 
-      // TODO use cbuffer
+      // TODO replace with cbuffer
       if (client.sentPackets.length > 200) {
         client.sentPackets.pop();
       }

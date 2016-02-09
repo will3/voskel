@@ -12,6 +12,7 @@
   "devDependencies": {
     "browserify": "^13.0.0",
     "browserify-shim": "^3.8.12",
+    "chai": "^3.5.0",
     "three": "^0.73.2",
     "voxel": "^0.5.0"
   },
@@ -25,7 +26,11 @@
   },
   "dependencies": {
     "b-mesher": "file:../b-mesher",
+    "jsondiffpatch": "^0.1.38",
     "keycode": "^2.1.0",
-    "ndarray": "^1.0.18"
+    "ndarray": "^1.0.18",
+    "socket.io": "^1.4.5",
+    "socket.io-client": "^1.4.5",
+    "winston": "^2.1.1"
   }
 }

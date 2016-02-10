@@ -39,7 +39,7 @@ describe('Channel', function() {
       var client = startClient(port);
 
       client.on('connect', function() {
-        expect(server.clients).to.have.length(1);
+        expect(server.getClients()).to.have.length(1);
         done();
       });
     });
@@ -69,7 +69,7 @@ describe('Channel', function() {
         server.tick();
         server.tick();
 
-        var serverClient = server.clients[0];
+        var serverClient = server.getClients()[0];
         expect(serverClient.sentPackets).to.have.length(1);
       });
     });

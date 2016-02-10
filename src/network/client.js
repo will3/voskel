@@ -1,38 +1,43 @@
 var io = require('socket.io-client');
-var winston = require('winston');
 var jsondiffpatch = require('jsondiffpatch');
 
-module.exports = function(arg) {
-  "use strict";
+"use strict";
 
+var Client = function(arg) {
   var host = arg;
   if (typeof arg === 'number') {
     host = 'http://localhost:' + arg;
   }
 
-  var socket = io(host);
+  this.host = host;
 
-  var state = null;
+  this.socket = io(host);
+
+  this.state = null;
+
+  this.app = null;
+};
+
+Client.prototype.start = function() {
+  var socket = this.socket;
+  var self = this;
 
   socket.on('state', function(packet) {
     var ack = packet.ack;
 
-    jsondiffpatch.patch(state, packet.state);
+    jsondiffpatch.patch(self.state, packet.state);
 
     socket.emit('state-ack', ack);
   });
+};
 
-  return {
-    socket: socket,
-    get state() {
-      return state;
-    },
-    set state(value) {
-      state = value;
-    },
-    on: function() {
-      var args = Array.prototype.slice.call(arguments, 0);
-      socket.on.apply(socket, args);
-    }
-  };
+Client.prototype.on = function() {
+  var args = Array.prototype.slice.call(arguments, 0);
+  this.socket.on.apply(this.socket, args);
+};
+
+module.exports = function(arg) {
+  var client = new Client(arg);
+  client.start();
+  return client;
 };

@@ -3,7 +3,7 @@ var THREE = require('three');
 
 module.exports = function(app, params) {
   "use strict";
-  
+
   params = params || {};
   var hasEditor = params.hasEditor || false;
   var camera = params.camera;
@@ -11,7 +11,7 @@ module.exports = function(app, params) {
   var object = new THREE.Object3D();
   var blocks = app.attach(object, require('../components/blocks'));
 
-  var dim = [16, 16, 16];
+  var dim = [32, 32, 32];
 
   for (var i = 0; i < dim[0]; i++) {
     for (var j = 0; j < dim[1]; j++) {
@@ -27,7 +27,6 @@ module.exports = function(app, params) {
   if (hasEditor) {
     var editor = app.attach(object, require('../components/editor'));
     editor.blocks = blocks;
-    editor.camera = camera;
   }
 
   return {

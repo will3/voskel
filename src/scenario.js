@@ -4,18 +4,32 @@ var a_ground = require('./assemblies/a_ground');
 module.exports = function(app, scene, camera) {
   app.value('app', app);
 
-  var textures = {
-    'default': THREE.ImageUtils.loadTexture('images/texture.png'),
-    'grass': THREE.ImageUtils.loadTexture('images/grass.png')
-  };
+  var textures = [
+    THREE.ImageUtils.loadTexture('images/1.png'),
+    THREE.ImageUtils.loadTexture('images/2.png'),
+    THREE.ImageUtils.loadTexture('images/98.png'),
+    THREE.ImageUtils.loadTexture('images/99.png')
+  ];
 
-  for (var i in textures) {
+  var materials = [];
+
+  for (var i = 0; i < textures.length; i++) {
     var texture = textures[i];
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
+    materials.push(new THREE.MeshLambertMaterial({
+      map: texture
+    }));
   }
 
+  var ambient = new THREE.AmbientLight(new THREE.Color("rgb(50%, 50%, 50%)"));
+  var light = new THREE.DirectionalLight(0xffffff, 0.5);
+  light.position.set(0.8, 1, 0.5);
+  scene.add(light);
+  scene.add(ambient);
+
   app.value('textures', textures);
+  app.value('materials', materials);
 
   trackball = app.attach(camera, require('./components/trackball'));
   app.value('camera', camera);

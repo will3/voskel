@@ -8,7 +8,7 @@ module.exports = function(object, physics) {
   var material = new THREE.MeshBasicMaterial({
     color: 0xff0000
   });
-  var moveSpeed = 0.3;
+  var moveSpeed = 0.5;
   var jumpSpeed = 0.8;
 
   var mesh = new THREE.Mesh(geometry, material);

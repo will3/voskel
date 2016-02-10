@@ -1,5 +1,5 @@
 module.exports = function(camera) {
-  var distance = 50;
+  var distance = 100;
   var target = new THREE.Vector3();
   var quaternion = new THREE.Quaternion();
 

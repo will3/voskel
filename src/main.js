@@ -6,11 +6,10 @@ var blocks = require('./components/blocks');
 var character = require('./components/character');
 
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-var renderer = new THREE.WebGLRenderer({
-  antialias: true
-});
+var renderer = new THREE.WebGLRenderer();
+renderer.setClearColor(0xf6f6f6);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -26,6 +25,8 @@ function render() {
   // Render renderPass and SSAO shaderPass
   scene.overrideMaterial = null;
   effectComposer.render();
+
+  renderer.render(scene, camera);
 };
 
 function onWindowResize() {

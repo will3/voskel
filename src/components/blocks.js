@@ -1,7 +1,7 @@
 var ndarray = require('ndarray');
 var mesher = require('b-mesher');
 
-module.exports = function(object, textures) {
+module.exports = function(object, materials) {
   "use strict";
 
   var palette = [null, 0xffffff];
@@ -11,6 +11,9 @@ module.exports = function(object, textures) {
   var offset = new THREE.Vector3();
   var mesh = null;
   var obj = new THREE.Object3D();
+  var material = new THREE.MeshLambertMaterial();
+  material.materials = materials;
+
   object.add(obj);
 
   function updateMesh() {
@@ -23,6 +26,18 @@ module.exports = function(object, textures) {
     }
   };
 
+  function collisionMeshes() {
+    var meshes = [];
+    for (var id in chunks) {
+      var chunk = chunks[id];
+      var mesh = chunk.mesh;
+      if (!!mesh) {
+        meshes.push(mesh);
+      }
+    }
+    return meshes;
+  };
+
   function updateChunk(chunk) {
     if (chunk.mesh != null) {
       obj.remove(chunk.mesh);
@@ -32,15 +47,6 @@ module.exports = function(object, textures) {
 
     var geometry = new THREE.Geometry();
 
-    var material = new THREE.MeshFaceMaterial();
-    material.materials.push(
-      new THREE.MeshBasicMaterial({
-        map: textures['default']
-      }),
-      new THREE.MeshBasicMaterial({
-        map: textures['grass']
-      })
-    );
 
     result.vertices.forEach(function(v) {
       var vertice = new THREE.Vector3(
@@ -52,26 +58,15 @@ module.exports = function(object, textures) {
     result.surfaces.forEach(function(surface) {
       var f = surface.face;
       var uv = surface.uv;
-      var t = f[4];
+      var c = f[4];
 
       var face = new THREE.Face3(f[0], f[1], f[2]);
       geometry.faces.push(face);
-      face.materialIndex = t - 1;
-      geometry.faceVertexUvs[0].push([
-        new THREE.Vector2().fromArray(uv[0]),
-        new THREE.Vector2().fromArray(uv[1]),
-        new THREE.Vector2().fromArray(uv[2])
-      ]);
-
+      face.color = new THREE.Color(palette[c]);
 
       face = new THREE.Face3(f[2], f[3], f[0]);
       geometry.faces.push(face);
-      face.materialIndex = t - 1;
-      geometry.faceVertexUvs[0].push([
-        new THREE.Vector2().fromArray(uv[2]),
-        new THREE.Vector2().fromArray(uv[3]),
-        new THREE.Vector2().fromArray(uv[0])
-      ]);
+      face.color = new THREE.Color(palette[c]);
     });
 
     geometry.computeFaceNormals();
@@ -153,8 +148,12 @@ module.exports = function(object, textures) {
     set: set,
     pointToCoord: pointToCoord,
     coordToPoint: coordToPoint,
-    getAtCoord: getAtCoord
+    getAtCoord: getAtCoord,
+    get material() {
+      return material;
+    },
+    collisionMeshes: collisionMeshes
   };
 };
 
-module.exports.$inject = ['textures'];
+module.exports.$inject = ['materials'];

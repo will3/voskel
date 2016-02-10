@@ -1,6 +1,6 @@
 var THREE = require('three');
 
-module.exports = function(object, events) {
+module.exports = function(object) {
   "use strict";
 
   var velocity = new THREE.Vector3();
@@ -22,5 +22,3 @@ module.exports = function(object, events) {
 
   return rigidBody;
 };
-
-module.exports.$inject = ['events'];

@@ -1,3 +1,5 @@
+var Events = require('../utils/events');
+
 module.exports = function(app, scene, camera) {
   var renderer = new THREE.WebGLRenderer();
   renderer.setClearColor(0xf6f6f6);
@@ -7,8 +9,14 @@ module.exports = function(app, scene, camera) {
   var renderer, camera;
   var ssaoPass, effectComposer;
 
+  var system = {};
+
+  Events.prototype.apply(system);
+
   function render() {
     requestAnimationFrame(render);
+
+    system.emit('before render');
 
     // Render depth into depthRenderTarget
     scene.overrideMaterial = depthMaterial;
@@ -17,6 +25,8 @@ module.exports = function(app, scene, camera) {
     // Render renderPass and SSAO shaderPass
     scene.overrideMaterial = null;
     effectComposer.render();
+
+    system.emit('after render');
   };
 
   function onWindowResize() {
@@ -82,4 +92,6 @@ module.exports = function(app, scene, camera) {
   render();
 
   window.addEventListener('resize', onWindowResize, false);
+
+  return system;
 };

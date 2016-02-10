@@ -1,5 +1,5 @@
-var startServer = require('../server');
-var startClient = require('../client');
+var startServer = require('../systems/server');
+var startClient = require('../systems/client');
 var expect = require('chai').expect;
 var jsondiffpatch = require('jsondiffpatch');
 

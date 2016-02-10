@@ -47,7 +47,9 @@ module.exports = function() {
     var args = Array.prototype.slice.call(arguments, 1);
     args.splice(0, 0, app);
     var system = factory.apply(null, args);
-    systems.push(system);
+    if (system != null) {
+      systems.push(system);
+    }
     return system;
   };
 
@@ -103,12 +105,39 @@ module.exports = function() {
     }
   };
 
+  var entityBindings = {};
+  var entityIdCount = 0;
+  var entities = {};
+
+  function registerEntity(type, factory) {
+    entityBindings[type] = factory;
+  };
+
+  function spawn(type, args) {
+    var factory = entityBindings[type];
+    var entity = new factory();
+    entity.app = app;
+    entity.spawn(args);
+
+    var id = entityIdCount;
+    entityIdCount++;
+
+    entity._id = id;
+    entity._type = type;
+    entities[id] = entity;
+
+    return entity;
+  };
+
   var app = {
     start: start,
     use: use,
     attach: attach,
     value: value,
-    getComponent: getComponent
+    getComponent: getComponent,
+    registerEntity: registerEntity,
+    spawn: spawn,
+    get: resolve
   };
 
   return app;

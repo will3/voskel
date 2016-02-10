@@ -1,8 +1,14 @@
 var ndarray = require('ndarray');
 var THREE = require('three');
 
-module.exports = function(app, params) {
-  "use strict";
+var Ground = function() {
+  this.app = null;
+  this.blocksComponent = null;
+};
+
+Ground.prototype.spawn = function(params) {
+  var app = this.app;
+  var scene = app.get('scene');
 
   params = params || {};
   var hasEditor = params.hasEditor || false;
@@ -21,7 +27,7 @@ module.exports = function(app, params) {
     }
   }
 
-  blocks.offset.set(-8, -8, -8);
+  blocks.offset.set(-16, -16, -16);
   blocks.updateMesh();
 
   if (hasEditor) {
@@ -29,8 +35,17 @@ module.exports = function(app, params) {
     editor.blocks = blocks;
   }
 
-  return {
-    object: object,
-    blocks: blocks
-  };
+  scene.add(object);
+
+  this.blocksComponent = blocks;
 };
+
+Ground.prototype.replicate = function(payload) {
+
+};
+
+Ground.prototype.serialize = function() {
+
+};
+
+module.exports = Ground;

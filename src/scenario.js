@@ -1,8 +1,18 @@
-var a_player = require('./assemblies/a_player');
-var a_ground = require('./assemblies/a_ground');
+var APlayer = require('./entities/aplayer');
+var AGround = require('./entities/aground');
 
-module.exports = function(app, scene, camera) {
+module.exports = function(app) {
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+  // Regsiter values
   app.value('app', app);
+  app.value('scene', scene);
+  app.value('camera', camera);
+
+  // Regsiter entities
+  app.registerEntity('player', APlayer);
+  app.registerEntity('ground', AGround);
 
   var textures = [
     THREE.ImageUtils.loadTexture('images/1.png'),
@@ -31,9 +41,10 @@ module.exports = function(app, scene, camera) {
   app.value('textures', textures);
   app.value('materials', materials);
 
+  // Attach camera control
   trackball = app.attach(camera, require('./components/trackball'));
-  app.value('camera', camera);
 
+  // Initialize systems
   var events = app.use(require('./systems/events'));
   app.value('events', events);
 
@@ -43,15 +54,19 @@ module.exports = function(app, scene, camera) {
   var input = app.use(require('./systems/input'));
   app.value('input', input);
 
-  // Player
-  var player0 = a_player(app);
-  player0.object.position.set(0, 20, 0);
-  scene.add(player0.object);
+  var renderer = app.use(require('./systems/renderer'), scene, camera);
+  app.value('renderer', renderer);
 
-  var ground = a_ground(app, {
+  // Spawn entities
+  app.spawn('player', {
+    position: [0, 40, 0]
+  });
+
+  var ground = app.spawn('ground', {
     hasEditor: true,
     camera: camera
   });
-  scene.add(ground.object);
-  physics.ground = ground.blocks;
+
+  // Configure physics ground
+  physics.ground = ground.blocksComponent;
 };

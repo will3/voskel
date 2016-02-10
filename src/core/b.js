@@ -103,12 +103,36 @@ module.exports = function() {
     }
   };
 
+  var entityBindings = {};
+  var entityIdCount = 0;
+  var entities = {};
+
+  function registerEntity(type, factory) {
+    entityAssemblies[type] = factory;
+  };
+
+  function spawn(type, args) {
+    var factory = entityBindings[type];
+    var entity = new factory();
+    entity.app = app;
+    entity.spawn(args);
+
+    var id = entityIdCount;
+    entityIdCount++;
+
+    entity._id = id;
+    entity._type = type;
+    entities[id] = entity;
+  };
+
   var app = {
     start: start,
     use: use,
     attach: attach,
     value: value,
-    getComponent: getComponent
+    getComponent: getComponent,
+    registerEntity: registerEntity,
+    spawn: spawn
   };
 
   return app;

@@ -1,9 +1,14 @@
 var ndarray = require('ndarray');
 var THREE = require('three');
 
-module.exports = function(app, params) {
-  "use strict";
-  
+var Ground = function() {
+  this.app = null;
+  this.blocksComponent = null;
+};
+
+Ground.prototype.spawn = function(params) {
+  var scene = app.get('scene');
+
   params = params || {};
   var hasEditor = params.hasEditor || false;
   var camera = params.camera;
@@ -30,8 +35,17 @@ module.exports = function(app, params) {
     editor.camera = camera;
   }
 
-  return {
-    object: object,
-    blocks: blocks
-  };
+  scene.add(object);
+
+  this.blocksComponent = blocks;
 };
+
+Ground.prototype.replicate = function(payload) {
+
+};
+
+Ground.prototype.serialize = function() {
+
+};
+
+module.exports = Ground;

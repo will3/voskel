@@ -1,34 +1,38 @@
 var winston = require('winston');
 var jsondiffpatch = require('jsondiffpatch');
+var CBuffer = require('cbuffer');
 
-module.exports = function(port) {
+module.exports = function(port, opts) {
   "use strict";
 
-  port = port || 3000;
+  opts = opts || {};
+  var sentBufferLength = opts.sentBufferLength || 100;
   var state = null;
-  var clients = {};
+  var clientMap = {};
 
   var io = require('socket.io')();
 
   io.on('connection', function(socket) {
     winston.log('info', 'a user connected');
+
     var client = {
       socket: socket,
       ack: 0,
       lastAck: 0,
-      sentPackets: [],
+      sentPackets: new CBuffer(sentBufferLength),
       getLastAckState: function() {
-        for (var i = 0; i < this.sentPackets.length; i++) {
-          var packet = this.sentPackets[i];
-          if (packet.ack === lastAck) {
+      	var self = this;
+        this.sentPackets.forEach(function(packet) {
+          if (packet.ack === self.lastAck) {
             return packet.state;
           }
-        }
+        });
+
         return null;
       }
     };
 
-    clients[socket.id] = client;
+    clientMap[socket.id] = client;
 
     socket.on('state-ack', function(data) {
       client.lastAck = data;
@@ -37,15 +41,15 @@ module.exports = function(port) {
 
   io.on('disconnect', function(socket) {
     winston.log('info', 'a user disconnected');
-    delete clients[socket.id];
+    delete clientMap[socket.id];
   });
 
   var server = io.listen(port);
   winston.log('info', 'started on port: ' + port);
 
   function tick() {
-    for (var id in clients) {
-      var client = clients[id];
+    for (var id in clientMap) {
+      var client = clientMap[id];
       var socket = client.socket;
 
       var lastAckState = client.getLastAckState();
@@ -65,22 +69,28 @@ module.exports = function(port) {
 
       // Record sent packets
       client.sentPackets.push(packet);
-
-      // TODO replace with cbuffer
-      if (client.sentPackets.length > 200) {
-        client.sentPackets.pop();
-      }
     }
   };
 
   return {
     io: io,
     tick: tick,
+    get clients() {
+      var clients = [];
+      for (var id in clientMap) {
+        clients.push(clientMap[id]);
+      }
+      return clients;
+    },
     get state() {
       return state;
     },
     set state(value) {
       state = value;
+    },
+    on: function() {
+      var args = Array.prototype.slice.call(arguments, 0);
+      io.on.apply(io, args);
     }
   };
 };

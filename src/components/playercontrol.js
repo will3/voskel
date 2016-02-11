@@ -1,5 +1,3 @@
-var gravityUtils = require('../utils/gravityutils');
-
 module.exports = function(object, app, input, camera) {
   "use strict";
 
@@ -18,18 +16,23 @@ module.exports = function(object, app, input, camera) {
     if (input.keyHold('d')) rightAmount += 1;
     if (input.keyHold('a')) rightAmount -= 1;
 
-    var normal = gravityUtils.getGravity(object.position).dir.clone().multiplyScalar(-1);
-    var up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
-    var right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+    var gravity = rigidBody.gravity;
 
-    var move = up.multiplyScalar(forwardAmount).add(right.multiplyScalar(rightAmount));
-    move.projectOnPlane(normal);
-    move.setLength(1);
+    if(gravity != null) {
+      var normal = gravity.dir.clone().multiplyScalar(-1);
 
-    character.move(move, 1);
+      var up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+      var right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
 
-    if (input.keyDown('space')) {
-      character.jump();
+      var move = up.multiplyScalar(forwardAmount).add(right.multiplyScalar(rightAmount));
+      move.projectOnPlane(normal);
+      move.setLength(1);
+
+      character.move(move, 1);
+
+      if (input.keyDown('space')) {
+        character.jump();
+      }  
     }
   };
 

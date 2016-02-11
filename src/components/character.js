@@ -1,5 +1,4 @@
 var THREE = require('three');
-var gravityUtils = require('../utils/gravityutils');
 
 module.exports = function(object) {
   "use strict";
@@ -23,19 +22,25 @@ module.exports = function(object) {
   };
 
   function move(forward, amount) {
+    var gravity = this.rigidBody.gravity;
+    if(gravity == null) {
+      return;
+    }
     if (this.rigidBody.grounded || jumping) {
-      var gravityDir = gravityUtils.getGravity(object.position).dir;
-      var verticalSpeed = this.rigidBody.velocity.clone().projectOnVector(gravityDir);
+      var verticalSpeed = this.rigidBody.velocity.clone().projectOnVector(gravity.dir);
       var forwardSpeed = forward.clone().setLength(amount * moveSpeed);
       this.rigidBody.velocity.copy(verticalSpeed.add(forwardSpeed));
     }
   };
 
   function jump(amount) {
+    var gravity = this.rigidBody.gravity;
+    if(gravity == null) {
+      return;
+    }
     if (this.rigidBody.grounded) {
       jumping = true;
-      var gravityDir = gravityUtils.getGravity(object.position).dir;
-      this.rigidBody.velocity.copy(gravityDir.clone().multiplyScalar(-jumpSpeed));
+      this.rigidBody.velocity.copy(gravity.dir.clone().multiplyScalar(-jumpSpeed));
     }
   };
 

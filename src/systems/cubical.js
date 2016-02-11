@@ -1,5 +1,32 @@
 var THREE = require('three');
-var gravityUtils = require('../utils/gravityutils');
+
+var Gravity = function(dir, axis, positive) {
+  this.dir = dir || new THREE.Vector3();
+  this.axis = axis || '';
+  this.positive = positive || '';
+
+  this.clone = function() {
+    return new Gravity(this.dir, this.axis, this.positive);
+  };
+
+  this.equals = function(gravity) {
+    return this.dir.equals(gravity.dir);
+  };
+
+  this.isNone = function() {
+    return this.dir.length() === 0;
+  };
+};
+
+var gravities = {
+  none: new Gravity(),
+  right: new Gravity(new THREE.Vector3(1, 0, 0).normalize(), 'x', true),
+  left: new Gravity(new THREE.Vector3(-1, 0, 0).normalize(), 'x', false),
+  top: new Gravity(new THREE.Vector3(0, 1, 0).normalize(), 'y', true),
+  bottom: new Gravity(new THREE.Vector3(0, -1, 0).normalize(), 'y', false),
+  front: new Gravity(new THREE.Vector3(0, 0, 1).normalize(), 'z', true),
+  back: new Gravity(new THREE.Vector3(0, 0, -1).normalize(), 'z', false)
+};
 
 module.exports = function() {
   "use strict";
@@ -9,7 +36,10 @@ module.exports = function() {
   var gravityAmount = 0.05;
 
   function onAttach(object, component) {
-    if (component.type === 'rigidBody') map[component._id] = component;
+    if (component.type === 'rigidBody') {
+      map[component._id] = component;
+      component.gravity = gravities.none;
+    }
   };
 
   function onDettach(object, component) {
@@ -23,13 +53,28 @@ module.exports = function() {
     }
   };
 
+  function getGravity(position) {
+    var min = 1;
+    var closest = null;
+    for (var id in gravities) {
+      var gravity = gravities[id];
+      var dot = gravity.dir.clone().dot(position.clone().normalize());
+      if (dot < min) {
+        min = dot;
+        closest = gravity;
+      }
+    }
+
+    return closest.clone();
+  };
+
   function updateComponent(rigidBody) {
     var ground = physics.ground;
     
     // Apply gravity
-    var gravity = gravityUtils.getGravity(rigidBody.object.position);
+    var gravity = getGravity(rigidBody.object.position);
     rigidBody.gravity = gravity;
-
+    
     var gravityForce = gravity.dir.clone().setLength(gravityAmount);
     rigidBody.applyForce(gravityForce);
 
@@ -76,15 +121,6 @@ module.exports = function() {
     // Clear acceleration
     rigidBody.acceleration.set(0, 0, 0);
   };
-
-  var gravities = [
-    new THREE.Vector3(1, 0, 0),
-    new THREE.Vector3(-1, 0, 0),
-    new THREE.Vector3(0, 1, 0),
-    new THREE.Vector3(0, -1, 0),
-    new THREE.Vector3(0, 0, 1),
-    new THREE.Vector3(0, 0, -1),
-  ];
 
   var physics = {
     onAttach: onAttach,

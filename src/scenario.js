@@ -43,8 +43,8 @@ module.exports = function(app) {
   var input = app.use(require('./systems/input')(container));
   app.value('input', input);
 
-  var physics = require('./systems/physics')();
-  app.use(physics);
+  var cubical = require('./systems/cubical')();
+  app.use(cubical);
 
   app.use(require('./systems/console')({
     onblur: function() {
@@ -55,5 +55,5 @@ module.exports = function(app) {
   app.loadAssembly(require('./assemblies/aground'));
   app.loadAssembly(require('./assemblies/aplayer'));
 
-  physics.ground = app.get('ground');
+  cubical.ground = app.get('ground');
 };

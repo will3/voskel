@@ -10,6 +10,7 @@ module.exports = function(app) {
 
   character.rigidBody = rigidBody;
   playerControl.character = character;
+  playerControl.rigidBody = rigidBody;
 
   scene.add(object);
 

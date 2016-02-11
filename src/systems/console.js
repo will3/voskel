@@ -86,6 +86,11 @@ module.exports = function(opts) {
     var command = commands[commandName];
     if (command == null) {
       addError(commandName + ': command not found');
+    }else {
+      var result = command(parseArgs(args.split(' ')));
+      if(typeof result === 'string') {
+        addLog(result);
+      }
     }
 
     input.value = '';
@@ -139,4 +144,8 @@ module.exports = function(opts) {
 
   // Hidden by default
   div.hidden = true;
+
+  return {
+    commands: commands
+  };
 };

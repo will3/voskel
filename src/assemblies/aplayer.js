@@ -17,6 +17,7 @@ module.exports = function(app) {
   object.position.set(0, 40, 0);
 
   app.value('player', {
-    rigidBody: rigidBody
+    rigidBody: rigidBody,
+    object: object
   });
 };

@@ -1,15 +1,36 @@
 var THREE = require('three');
 
-module.exports = function(object, input, camera) {
+module.exports = function(object, app, input, camera, devConsole) {
   "use strict";
 
   var raycaster = new THREE.Raycaster();
   var sn = 0.0001;
   var blocks = null;
 
-  function getMouseCoord(delta) {
-    var mouse = input.mouse;
+  devConsole.commands['new'] = function(args) {
+    var size = args._[0] || 16;
+    var halfSize = size / 2;
 
+    blocks.clear();
+
+    var dim = [size, size, size];
+
+    for (var i = 0; i < dim[0]; i++) {
+      for (var j = 0; j < dim[1]; j++) {
+        for (var k = 0; k < dim[2]; k++) {
+          blocks.set(i, j, k, 1);
+        }
+      }
+    }
+
+    blocks.offset.set(-halfSize, -halfSize, -halfSize);
+    blocks.updateMesh();
+
+    var player = app.get('player');
+    player.object.position.set(0, size + 20, 0);
+  };
+
+  function getMouseCoord(mouse, delta) {
     raycaster.setFromCamera(mouse, camera);
     var intersects = raycaster.intersectObjects(blocks.collisionMeshes());
 
@@ -29,88 +50,59 @@ module.exports = function(object, input, camera) {
     return coord;
   };
 
-  function tick() {
-    var shouldAdd = (input.mouseHold(0) && input.mouseMove) || input.mouseClick(0);
-    var shouldRemove = (input.mouseHold(2) && input.mouseMove) || input.mouseClick(2);
+  var lastMouse = new THREE.Vector2();
 
-    if (shouldAdd) {
-      var coord = getMouseCoord(-sn);
+  function addBlock(point) {
+    var coord = getMouseCoord(point, -sn);
 
-      if (!!coord) {
-        blocks.set(coord.x, coord.y, coord.z, 1);
-        blocks.updateMesh();
-      }
-    } else if (shouldRemove) {
-      var coord = getMouseCoord(sn);
-
-      if (!!coord) {
-        blocks.set(coord.x, coord.y, coord.z, 0);
-        blocks.updateMesh();
-      }
+    if (!!coord) {
+      blocks.set(coord.x, coord.y, coord.z, 1);
+      blocks.updateMesh();
     }
-
-    // drawWireframe();
   };
 
-  function getVector(i, j, k, d, u, v) {
-    var array = [];
-    array[d] = i;
-    array[u] = j;
-    array[v] = k;
-    return new THREE.Vector3().fromArray(array);
-  }
+  function removeBlock(point) {
+    var coord = getMouseCoord(point, sn);
 
-  var wireframe = null;
-  var lineMaterial = new THREE.LineBasicMaterial({
-    color: 0x000000
-  });
-
-  function drawWireframe() {
-    if (!!wireframe) {
-      object.remove(wireframe);
-      wireframe.geometry.dispose();
+    if (!!coord) {
+      blocks.set(coord.x, coord.y, coord.z, 0);
+      blocks.updateMesh();
     }
-    var coordA = getMouseCoord(-sn);
-    var coordB = getMouseCoord(sn);
+  };
 
-    if (!coordA || !coordB) return;
+  function tick() {
+    var mouse = input.mouse.clone();
 
-    coordA = coordA.toArray();
-    coordB = coordB.toArray();
+    if(input.mouseClick(0)) {
+      addBlock(mouse);
+    }
 
-    var coords = [];
+    if(input.mouseClick(2)) {
+      removeBlock(mouse);
+    }
 
-    for (var d = 0; d < 3; d++) {
-      var u = (d + 1) % 3;
-      var v = (d + 2) % 3;
+    var dir = new THREE.Vector2().subVectors(mouse, lastMouse);
+    var distance = dir.length();
+    var gap = 1;
+    var interval = distance / gap;
+    
+    var step = dir.clone().setLength(gap);
 
-      if (coordA[d] !== coordB[d]) {
-        var sign = coordA[d] > coordB[d] ? 1 : -1;
-        var i = (coordA[d] + coordB[d]) / 2  +0.5 + sign * 0.1;
-        var j0 = coordA[u];
-        var j1 = coordA[u] + 1.0;
-        var k0 = coordA[v];
-        var k1 = coordA[v] + 1.0;
-
-        coords.push(
-          getVector(i, j0, k0, d, u, v),
-          getVector(i, j1, k0, d, u, v),
-          getVector(i, j1, k1, d, u, v),
-          getVector(i, j0, k1, d, u, v),
-          getVector(i, j0, k0, d, u, v)
-        );
-
-        break;
+    if(input.mouseHold(0)) {
+      var point = lastMouse.clone();
+      for(var i = 0; i < interval; i ++) {
+        addBlock(point);
+        point.add(step);
       }
+
+      lastMouse.copy(point);
     }
 
-    var geometry = new THREE.Geometry();
-    for (var i = 0; i < coords.length; i++) {
-      var point = blocks.coordToPoint(coords[i]);
-      geometry.vertices.push(point);
+    if(input.mouseHold(2)) {
+
     }
-    wireframe = new THREE.Line(geometry, lineMaterial);
-    object.add(wireframe);
+
+    lastMouse = mouse;
   };
 
   var editor = {
@@ -123,4 +115,4 @@ module.exports = function(object, input, camera) {
   return editor;
 };
 
-module.exports.$inject = ['input', 'camera'];
+module.exports.$inject = ['app', 'input', 'camera', 'devConsole'];

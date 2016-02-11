@@ -40,11 +40,13 @@ module.exports = function(app) {
   var cubical = require('./systems/cubical')();
   app.use(cubical);
 
-  app.use(require('./systems/console')({
+  var devConsole = require('./systems/console')({
     onblur: function() {
       container.focus();
     }
-  }));
+  });
+  app.use(devConsole);
+  app.value('devConsole', devConsole);
 
   app.loadAssembly(require('./assemblies/aground'));
   app.loadAssembly(require('./assemblies/aplayer'));

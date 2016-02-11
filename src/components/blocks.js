@@ -14,6 +14,17 @@ module.exports = function(object, materials) {
   var material = new THREE.MeshLambertMaterial();
   material.materials = materials;
 
+  function clear() {
+    for(var id in chunks) {
+      var chunk = chunks[id];
+      var mesh = chunk.mesh;
+      if (mesh != null) {
+        obj.remove(mesh);
+      }
+    }
+    chunks = {};
+  };
+
   object.add(obj);
 
   function updateMesh() {
@@ -152,7 +163,8 @@ module.exports = function(object, materials) {
     get material() {
       return material;
     },
-    collisionMeshes: collisionMeshes
+    collisionMeshes: collisionMeshes,
+    clear: clear
   };
 };
 

@@ -44,16 +44,16 @@ module.exports = function(app) {
   // Attach camera control
   trackball = app.attach(camera, require('./components/trackball'));
 
-  var physics = app.use(require('./systems/physics'));
+  var physics = app.use(require('./plugins/physics'));
   app.value('physics', physics);
 
-  var input = app.use(require('./systems/input'));
+  var input = app.use(require('./plugins/input'));
   app.value('input', input);
 
-  var renderer = app.use(require('./systems/renderer'), scene, camera);
+  var renderer = app.use(require('./plugins/renderer'), scene, camera);
   app.value('renderer', renderer);
 
-  app.use(require('./systems/stats'));
+  app.use(require('./plugins/stats'));
 
   // Spawn entities
   app.spawn('player', {

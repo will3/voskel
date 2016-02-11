@@ -25,12 +25,6 @@ module.exports = function(app) {
     }));
   }
 
-  var ambient = new THREE.AmbientLight(new THREE.Color("rgb(50%, 50%, 50%)"));
-  var light = new THREE.DirectionalLight(0xffffff, 0.5);
-  light.position.set(0.8, 1, 0.5);
-  scene.add(light);
-  scene.add(ambient);
-
   app.value('textures', textures);
   app.value('materials', materials);
 

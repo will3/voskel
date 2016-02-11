@@ -56,6 +56,7 @@ module.exports = function() {
   function getGravity(position) {
     var min = 1;
     var closest = null;
+    var force = new THREE.Vector3();
     for (var id in gravities) {
       var gravity = gravities[id];
       var dot = gravity.dir.clone().dot(position.clone().normalize());
@@ -63,9 +64,16 @@ module.exports = function() {
         min = dot;
         closest = gravity;
       }
+
+      if(dot < - 0.5) {
+        var ratio = -0.5 - dot;
+        force.add(gravity.dir.clone().multiplyScalar(ratio));
+      }
     }
 
-    return closest.clone();
+    var gravity = closest.clone();
+    gravity.forceDir = force.normalize();
+    return gravity;
   };
 
   function updateComponent(rigidBody) {
@@ -75,8 +83,14 @@ module.exports = function() {
     var gravity = getGravity(rigidBody.object.position);
     rigidBody.gravity = gravity;
     
-    var gravityForce = gravity.dir.clone().setLength(gravityAmount);
-    rigidBody.applyForce(gravityForce);
+    if(rigidBody.grounded) {
+      var gravityForce = gravity.dir.clone().setLength(gravityAmount);
+      rigidBody.applyForce(gravityForce);  
+    }else {
+      var gravityForce = gravity.forceDir.clone().setLength(gravityAmount);
+      rigidBody.applyForce(gravityForce);
+    }
+    
 
     // Apply acceleration to velocity
     rigidBody.velocity.add(rigidBody.acceleration);

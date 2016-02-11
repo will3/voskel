@@ -4,6 +4,7 @@ module.exports = function(scene, camera, container) {
   var renderer = new THREE.WebGLRenderer();
   renderer.setClearColor(0xf6f6f6);
   renderer.setSize(window.innerWidth, window.innerHeight);
+
   container = container || document.body;
   container.appendChild(renderer.domElement);
 
@@ -18,6 +19,12 @@ module.exports = function(scene, camera, container) {
   stats.domElement.style.bottom = '0px';
 
   document.body.appendChild(stats.domElement);
+
+  var ambient = new THREE.AmbientLight(new THREE.Color("rgb(40%, 40%, 40%)"));
+  var light = new THREE.DirectionalLight(0xffffff, 0.6);
+  light.position.set(0.8, 1, 0.5);
+  scene.add(light);
+  scene.add(ambient);
 
   function render() {
     requestAnimationFrame(render);

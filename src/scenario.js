@@ -47,13 +47,23 @@ module.exports = function(app) {
   var physics = app.use(require('./plugins/physics'));
   app.value('physics', physics);
 
-  var input = app.use(require('./plugins/input'));
-  app.value('input', input);
+  var container = document.getElementById('container');
 
-  var renderer = app.use(require('./plugins/renderer'), scene, camera);
+  var renderer = app.use(require('./systems/renderer'), scene, camera, container);
   app.value('renderer', renderer);
 
+  var input = app.use(require('./systems/input'), container);
+  app.value('input', input);
+
   app.use(require('./plugins/stats'));
+
+  app.use(require('./systems/stats'));
+
+  app.use(require('./systems/console'), {
+    onblur: function() {
+      container.focus();
+    }
+  });
 
   // Spawn entities
   app.spawn('player', {

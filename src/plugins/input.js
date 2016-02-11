@@ -1,7 +1,7 @@
 var arrayUtils = require('../utils/arrayutils');
 var keycode = require('keycode');
 
-module.exports = function(app) {
+module.exports = function(app, element) {
   "use strict";
   
   var mouse = new THREE.Vector2();
@@ -15,6 +15,8 @@ module.exports = function(app) {
   var mousedownTimes = {};
   var clickTime = 150;
   var mouseclicks = [];
+
+  element.focus();
 
   function onMouseMove(e) {
     mousemove = true;
@@ -64,11 +66,11 @@ module.exports = function(app) {
     mouseclicks = [];
   }
 
-  window.addEventListener('mousedown', onMouseDown);
-  window.addEventListener('mousemove', onMouseMove);
-  window.addEventListener('mouseup', onMouseUp);
-  window.addEventListener('keydown', onKeyDown);
-  window.addEventListener('keyup', onKeyUp);
+  element.addEventListener('mousedown', onMouseDown);
+  element.addEventListener('mousemove', onMouseMove);
+  element.addEventListener('mouseup', onMouseUp);
+  element.addEventListener('keydown', onKeyDown);
+  element.addEventListener('keyup', onKeyUp);
 
   return {
     mouse: mouse,

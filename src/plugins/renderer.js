@@ -1,10 +1,11 @@
 var Events = require('../utils/events');
 
-module.exports = function(app, scene, camera) {
+module.exports = function(app, scene, camera, container) {
   var renderer = new THREE.WebGLRenderer();
   renderer.setClearColor(0xf6f6f6);
   renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  container = container || document.body;
+  container.appendChild(renderer.domElement);
 
   var renderer, camera;
   var ssaoPass, effectComposer;

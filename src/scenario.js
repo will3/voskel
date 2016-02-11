@@ -44,7 +44,7 @@ module.exports = function(app) {
   // Attach camera control
   trackball = app.attach(camera, require('./components/trackball'));
 
-  var physics = app.use(require('./plugins/physics'));
+  var physics = app.use(require('./systems/physics'));
   app.value('physics', physics);
 
   var container = document.getElementById('container');
@@ -54,8 +54,6 @@ module.exports = function(app) {
 
   var input = app.use(require('./systems/input'), container);
   app.value('input', input);
-
-  app.use(require('./plugins/stats'));
 
   app.use(require('./systems/stats'));
 

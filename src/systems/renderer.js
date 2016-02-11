@@ -1,6 +1,6 @@
-var Events = require('../utils/events');
+var Stats = require('stats.js');
 
-module.exports = function(app, scene, camera, container) {
+module.exports = function(scene, camera, container) {
   var renderer = new THREE.WebGLRenderer();
   renderer.setClearColor(0xf6f6f6);
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -12,12 +12,17 @@ module.exports = function(app, scene, camera, container) {
 
   var system = {};
 
-  Events.prototype.apply(system);
+  var stats = new Stats();
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.right = '0px';
+  stats.domElement.style.bottom = '0px';
+
+  document.body.appendChild(stats.domElement);
 
   function render() {
     requestAnimationFrame(render);
 
-    system.emit('before render');
+    stats.begin();
 
     // Render depth into depthRenderTarget
     scene.overrideMaterial = depthMaterial;
@@ -27,7 +32,7 @@ module.exports = function(app, scene, camera, container) {
     scene.overrideMaterial = null;
     effectComposer.render();
 
-    system.emit('after render');
+    stats.end();
   };
 
   function onWindowResize() {

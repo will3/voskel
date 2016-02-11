@@ -1,6 +1,6 @@
 var parseArgs = require('minimist');
 
-module.exports = function(app, opts) {
+module.exports = function(opts) {
   opts = opts || {};
   var onfocus = opts.onfocus || null;
   var onblur = opts.onblur || null;

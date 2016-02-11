@@ -1,13 +1,12 @@
 var THREE = require('three');
 var gravityUtils = require('../utils/gravityutils');
 
-module.exports = function(app) {
+module.exports = function() {
   "use strict";
 
   var map = {};
   var cog = new THREE.Vector3();
   var gravityAmount = 0.05;
-  var ground = null;
 
   function onAttach(object, component) {
     if (component.type === 'rigidBody') map[component._id] = component;
@@ -25,6 +24,8 @@ module.exports = function(app) {
   };
 
   function updateComponent(rigidBody) {
+    var ground = physics.ground;
+    
     // Apply gravity
     var gravity = gravityUtils.getGravity(rigidBody.object.position);
     rigidBody.gravity = gravity;
@@ -86,12 +87,10 @@ module.exports = function(app) {
   ];
 
   var physics = {
-    set ground(value) {
-      ground = value;
-    },
     onAttach: onAttach,
     onDettach: onDettach,
-    tick: tick
+    tick: tick,
+    ground: null
   };
 
   return physics;

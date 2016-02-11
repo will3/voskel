@@ -1,7 +1,7 @@
 var THREE = require('three');
 var gravityUtils = require('../utils/gravityutils');
 
-module.exports = function(object, physics) {
+module.exports = function(object) {
   "use strict";
 
   var geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -16,6 +16,7 @@ module.exports = function(object, physics) {
   var jumping = false;
 
   function tick() {
+    character.gravity = this.rigidBody.gravity;
     if (jumping && this.rigidBody.grounded) {
       jumping = false;
     }
@@ -47,5 +48,3 @@ module.exports = function(object, physics) {
 
   return character;
 };
-
-module.exports.$inject = ['physics'];

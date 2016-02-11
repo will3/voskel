@@ -1,9 +1,9 @@
 var arrayUtils = require('../utils/arrayutils');
 var keycode = require('keycode');
 
-module.exports = function(app, element) {
+module.exports = function(element) {
   "use strict";
-  
+
   var mouse = new THREE.Vector2();
   var mousedowns = [];
   var mouseups = [];

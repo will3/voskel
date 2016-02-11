@@ -43,10 +43,7 @@ module.exports = function() {
     return component;
   };
 
-  function use(factory) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    args.splice(0, 0, app);
-    var system = factory.apply(null, args);
+  function use(system) {
     if (system != null) {
       systems.push(system);
     }
@@ -109,24 +106,23 @@ module.exports = function() {
   var entityIdCount = 0;
   var entities = {};
 
-  function registerEntity(type, factory) {
-    entityBindings[type] = factory;
+  function loadAssembly(assembly) {
+    assembly(this);
   };
 
-  function spawn(type, args) {
-    var factory = entityBindings[type];
-    var entity = new factory();
-    entity.app = app;
-    entity.spawn(args);
+  var componentBindings = {};
 
-    var id = entityIdCount;
-    entityIdCount++;
+  function registerComponent(type, constructor) {
+    componentBindings[type] = constructor;
+  };
 
-    entity._id = id;
-    entity._type = type;
-    entities[id] = entity;
-
-    return entity;
+  function createComponent(type) {
+    var constructor = componentBindings[type];
+    if (constructor == null) {
+      throw new Error('binding not found for type: ' + type);
+    }
+    var component = new constructor();
+    component.app = this;
   };
 
   var app = {
@@ -135,9 +131,10 @@ module.exports = function() {
     attach: attach,
     value: value,
     getComponent: getComponent,
-    registerEntity: registerEntity,
-    spawn: spawn,
-    get: resolve
+    loadAssembly: loadAssembly,
+    get: resolve,
+    registerComponent: registerComponent,
+    createComponent: createComponent
   };
 
   return app;

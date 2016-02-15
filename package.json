@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "CBuffer": "^1.1.1",
-    "b-mesher": "file:../b-mesher",
+    "greedy-mesher": "^1.0.3",
     "jsondiffpatch": "^0.1.38",
     "keycode": "^2.1.0",
     "minimist": "^1.2.0",

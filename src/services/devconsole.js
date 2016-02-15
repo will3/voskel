@@ -91,11 +91,11 @@ module.exports = function(opts) {
       if (typeof result === 'string') {
         addLog(result);
       }
+
+      hide();
     }
 
     input.value = '';
-
-    hide();
   };
 
   function addLog(line) {

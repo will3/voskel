@@ -20,8 +20,8 @@ module.exports = function(element) {
 
   function onMouseMove(e) {
     mousemove = true;
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
   };
 
   function onMouseDown(e) {
@@ -109,6 +109,13 @@ module.exports = function(element) {
 
     lateTick: function() {
       clear();
+    },
+
+    screenToViewport: function(screen) {
+      var viewport = new THREE.Vector2();
+      viewport.x = (screen.x / window.innerWidth) * 2 - 1;
+      viewport.y = -(screen.y / window.innerHeight) * 2 + 1;
+      return viewport;
     }
   };
 };

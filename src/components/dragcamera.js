@@ -5,27 +5,41 @@ module.exports = function(camera, input) {
 
   var rotation = new THREE.Euler(-Math.PI / 4, Math.PI / 4, 0, 'YXZ');
   var lastMouse = new THREE.Vector2();
-  var mouseSpeedX = 4;
-  var mouseSpeedY = 4;
+  var mouseSpeedX = 0.01;
+  var mouseSpeedY = 0.01;
   var unitVector = new THREE.Vector3(0, 0, 1);
-  var distance = 100;
+  var distance = 50;
   var target = new THREE.Vector3(0, 0, 0);
   var maxPitch = Math.PI / 2 - 0.01;
   var minPitch = -Math.PI / 2 + 0.01;
+  var zoomRate = 1.1;
 
   function tick() {
-    if (input.mouseHold(2)) {
+    var needsUpdate = false;
+    if (input.keyHold('alt') && input.mouseHold(0)) {
       var diff = new THREE.Vector2().subVectors(input.mouse, lastMouse);
       rotation.y += diff.x * mouseSpeedX;
-      rotation.x -= diff.y * mouseSpeedY;
+      rotation.x += diff.y * mouseSpeedY;
 
       if (rotation.x < minPitch) rotation.x = minPitch;
       if (rotation.x > maxPitch) rotation.x = maxPitch;
 
-      updateCamera();
+      needsUpdate = true;
     }
 
     lastMouse.copy(input.mouse);
+
+    if (input.keyUp('=')) {
+      distance /= zoomRate;
+      needsUpdate = true;
+    } else if (input.keyUp('-')) {
+      distance *= zoomRate;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      updateCamera();
+    }
   };
 
   function updateCamera() {

@@ -7,37 +7,74 @@ module.exports = function(object, app, input, camera, devConsole, config) {
   var sn = 0.0001;
   var blocks = null;
   var ground = null;
+  var boundingBox = null;
   var tempBlocks = null;
 
   devConsole.commands['new'] = function(args) {
     var size = args._[0] || 16;
 
+    updateSize(size);
+  };
+
+  function updateSize(size) {
+    blocks.setDim([size, size, size]);
+    blocks.obj.position.set(-size / 2, -size / 2, -size / 2);
+    tempBlocks.setDim([size, size, size]);
+    tempBlocks.obj.position.set(-size / 2, -size / 2, -size / 2);
     updateGround(size);
+    updateBoundingBox(size);
   };
 
   function updateGround(size) {
-    ground.clear();
-
-    var dim = [size, 2, size];
-
-    for (var i = 0; i < dim[0]; i++) {
-      for (var j = 0; j < dim[1]; j++) {
-        for (var k = 0; k < dim[2]; k++) {
-          ground.set(i, j, k, 1);
-        }
-      }
+    if (ground != null) {
+      object.remove(ground);
     }
 
-    ground.offset.set(-dim[0] / 2, -dim[1] / 2, -dim[2] / 2);
-    ground.updateMesh();
+    var geometry = new THREE.Geometry();
+    geometry.vertices.push(
+      new THREE.Vector3(-size / 2, -size / 2, -size / 2),
+      new THREE.Vector3(size / 2, -size / 2, -size / 2),
+      new THREE.Vector3(size / 2, -size / 2, size / 2),
+      new THREE.Vector3(-size / 2, -size / 2, size / 2)
+    );
+    geometry.faces.push(
+      new THREE.Face3(2, 1, 0),
+      new THREE.Face3(0, 3, 2)
+    );
+    geometry.faceVertexUvs[0].push(
+      [
+        new THREE.Vector2(0, 0),
+        new THREE.Vector2(size / 2, 0),
+        new THREE.Vector2(size / 2, size / 2)
+      ], [
+        new THREE.Vector2(size / 2, size / 2),
+        new THREE.Vector2(0, size / 2),
+        new THREE.Vector2(0, 0)
+      ]
+    );
+    var material = materials['placeholder'];
+    ground = new THREE.Mesh(geometry, material);
+    object.add(ground);
   };
 
-  function getMouseCoord(delta) {
-    var mouse = input.mouse;
-    raycaster.setFromCamera(mouse, camera);
+  function updateBoundingBox(size) {
+    if (boundingBox != null) {
+      object.remove(boundingBox);
+    }
+
+    var geometry = new THREE.BoxGeometry(size, size, size);
+    var material = new THREE.MeshBasicMaterial();
+    boundingBox = new THREE.Mesh(geometry, material);
+    var wireframe = new THREE.EdgesHelper(boundingBox, 0xffffff);
+    object.add(wireframe);
+  };
+
+  function getCoord(atPoint, delta) {
+    var viewport = input.screenToViewport(atPoint);
+    raycaster.setFromCamera(viewport, camera);
     var objects = [];
     if (blocks.object != null) objects.push(blocks.obj);
-    if (ground.object != null) objects.push(ground.obj);
+    if (ground != null) objects.push(ground);
     var intersects = raycaster.intersectObjects(objects, true);
 
     if (intersects.length === 0) {
@@ -51,24 +88,45 @@ module.exports = function(object, app, input, camera, devConsole, config) {
     diff = diff.setLength(diff.length() + delta || 0);
     point = camera.position.clone().add(diff);
 
-    var coord = blocks.pointToCoord(point);
+    var localPoint = blocks.obj.worldToLocal(point);
+    var coord = blocks.pointToCoord(localPoint);
+    coord = new THREE.Vector3(
+      Math.round(coord.x),
+      Math.round(coord.y),
+      Math.round(coord.z)
+    );
 
     return coord;
   };
 
-  var lastMouse = new THREE.Vector2();
-
-  var startCoord = null;
-  var endCoord = null;
-
   function start() {
-    ground = app.attach(object, require('./blocks'));
-    updateGround(config['editor_ground_size']);
     blocks = app.attach(object, require('./blocks'));
     tempBlocks = app.attach(object, require('./blocks'));
+
+    updateSize(config['editor_default_size']);
   };
 
   var _started = false;
+
+  var lastMouse = new THREE.Vector2();
+
+  var mouseSampleInterval = 4;
+
+  function getMousePoints(from, to, maxDis) {
+    var distance = new THREE.Vector2().subVectors(to, from).length();
+
+    var interval = Math.ceil(distance / maxDis);
+    var step = new THREE.Vector2().subVectors(to, from).setLength(distance / interval);
+
+    var list = [];
+    var start = from.clone();
+    list.push(start);
+    for (var i = 0; i < interval; i++) {
+      start.add(step);
+      list.push(start.clone());
+    }
+    return list;
+  };
 
   function tick() {
     if (!_started) {
@@ -76,31 +134,29 @@ module.exports = function(object, app, input, camera, devConsole, config) {
       _started = true;
     }
 
-    var mouse = input.mouse.clone();
-    var coordA = getMouseCoord(-sn);
-    var coordB = getMouseCoord(sn);
-
     if (input.mouseClick(0)) {
-      blocks.setAtCoord(coordA, 1);
-    }
-
-    if (input.mouseDown(0)) {
-      if (!!startCoord) {
-        commitTempBlocks();
-        startCoord = null;
+      var coord = getCoord(input.mouse, -sn);
+      if (!!coord) {
+        if (tempBlocks.getAtCoord(coord) != 1) {
+          tempBlocks.setAtCoord(coord, 1);
+        }
       }
     }
 
     if (input.mouseHold(0)) {
-      if(startCoord == null && !!coordA) {
-        startCoord = coordA.clone();
+      var points = getMousePoints(lastMouse, input.mouse, mouseSampleInterval);
+      for (var i = 0; i < points.length; i++) {
+        var coord = getCoord(points[i], -sn);
+        if (!!coord) {
+          if (tempBlocks.getAtCoord(coord) !== 1) {
+            tempBlocks.setAtCoord(coord, 1);
+          }
+        }
       }
+    }
 
-      endCoord = coordA;
-
-      if (!!startCoord && !!endCoord) {
-        updateTempBlocks();
-      }
+    if (input.mouseUp(0)) {
+      commitTempBlocks();
     }
 
     if (input.keyDown('up')) {
@@ -123,6 +179,23 @@ module.exports = function(object, app, input, camera, devConsole, config) {
       }
     }
 
+    if (input.keyDown('a')) {
+      blocks.offset[1]--;
+      blocks.setDirty();
+
+      tempBlocks.offset[1]--;
+      blocks.setDirty();
+    }
+
+    if (input.keyDown('z')) {
+      blocks.offset[1]++;
+      blocks.setDirty();
+
+      tempBlocks.offset[1]++;
+      blocks.setDirty();
+    }
+
+    lastMouse = input.mouse.clone();
   };
 
   function updateTempBlocks() {
@@ -137,19 +210,6 @@ module.exports = function(object, app, input, camera, devConsole, config) {
       blocks.set(i, j, k, b);
     });
     tempBlocks.clear();
-  };
-
-  function visitBound(lo, hi, callback) {
-    var xs = hi.x > lo.x ? [lo.x, hi.x] : [hi.x, lo.x];
-    var ys = hi.y > lo.y ? [lo.y, hi.y] : [hi.y, lo.y];
-    var zs = hi.z > lo.z ? [lo.z, hi.z] : [hi.z, lo.z];
-    for (var i = xs[0]; i <= xs[1]; i++) {
-      for (var j = ys[0]; j <= ys[1]; j++) {
-        for (var k = zs[0]; k <= zs[1]; k++) {
-          callback(i, j, k);
-        }
-      }
-    }
   };
 
   var editor = {

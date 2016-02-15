@@ -1,6 +1,9 @@
 var events = require('./events');
+var Stats = require('stats.js');
 
-module.exports = function() {
+var modules = {};
+
+module.exports = function(name) {
   "use strict";
 
   function guid() {
@@ -15,7 +18,7 @@ module.exports = function() {
 
   var app = {};
   var map = {};
-  var frameRate = 48.0;
+  var frameRate = 60.0;
   var systems = [];
   var bindings = {};
 
@@ -63,6 +66,7 @@ module.exports = function() {
   };
 
   function tick() {
+    stats.begin();
     for (var i = 0; i < systems.length; i++) {
       var system = systems[i];
       if (system.tick != null) system.tick();
@@ -80,7 +84,9 @@ module.exports = function() {
       var system = systems[i];
       if (system.lateTick != null) system.lateTick();
     }
+
     setTimeout(tick, 1000 / frameRate);
+    stats.end();
   };
 
   function start() {
@@ -149,7 +155,20 @@ module.exports = function() {
     createComponent: createComponent
   };
 
+  var stats = new Stats();
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.right = '0px';
+  stats.domElement.style.bottom = '40px';
+
+  document.body.appendChild(stats.domElement);
+
   events.prototype.apply(app);
+
+  if (name != null) {
+    modules[name] = app;
+  }
 
   return app;
 };
+
+module.exports.modules = modules;

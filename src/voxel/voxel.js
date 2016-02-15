@@ -1,32 +1,5 @@
 var THREE = require('three');
-
-var Gravity = function(dir, axis, positive) {
-  this.dir = dir || new THREE.Vector3();
-  this.axis = axis || '';
-  this.positive = positive || '';
-
-  this.clone = function() {
-    return new Gravity(this.dir, this.axis, this.positive);
-  };
-
-  this.equals = function(gravity) {
-    return this.dir.equals(gravity.dir);
-  };
-
-  this.isNone = function() {
-    return this.dir.length() === 0;
-  };
-};
-
-var gravities = {
-  none: new Gravity(),
-  right: new Gravity(new THREE.Vector3(1, 0, 0).normalize(), 'x', true),
-  left: new Gravity(new THREE.Vector3(-1, 0, 0).normalize(), 'x', false),
-  top: new Gravity(new THREE.Vector3(0, 1, 0).normalize(), 'y', true),
-  bottom: new Gravity(new THREE.Vector3(0, -1, 0).normalize(), 'y', false),
-  front: new Gravity(new THREE.Vector3(0, 0, 1).normalize(), 'z', true),
-  back: new Gravity(new THREE.Vector3(0, 0, -1).normalize(), 'z', false)
-};
+var gravityUtils = require('./gravityutils');
 
 module.exports = function() {
   "use strict";
@@ -36,51 +9,35 @@ module.exports = function() {
   var gravityAmount = 0.05;
 
   function onAttach(object, component) {
-    if (component.type === 'rigidBody') {
-      map[component._id] = component;
-      component.gravity = gravities.none;
+    var voxelBody = this.app.getComponent(object, 'voxelBody');
+    var rigidBody = this.app.getComponent(object, 'rigidBody');
+    if(voxelBody != null && rigidBody != null) {
+      map[object._id] = {
+        voxelBody: voxelBody,
+        rigidBody: rigidBody
+      }
     }
   };
 
   function onDettach(object, component) {
-    if (component.type === 'rigidBody') delete map[component._id];
+    if(map[object._id] != null) {
+      delete [object._id];
+    }
   };
 
   function tick() {
     for (var id in map) {
-      var component = map[id];
-      updateComponent(component);
+      var node = map[id];
+      updateNode(component);
     }
   };
 
-  function getGravity(position) {
-    var min = 1;
-    var closest = null;
-    var force = new THREE.Vector3();
-    for (var id in gravities) {
-      var gravity = gravities[id];
-      var dot = gravity.dir.clone().dot(position.clone().normalize());
-      if (dot < min) {
-        min = dot;
-        closest = gravity;
-      }
-
-      if(dot < - 0.5) {
-        var ratio = -0.5 - dot;
-        force.add(gravity.dir.clone().multiplyScalar(ratio));
-      }
-    }
-
-    var gravity = closest.clone();
-    gravity.forceDir = force.normalize();
-    return gravity;
-  };
-
-  function updateComponent(rigidBody) {
+  function updateNode(node) {
     var ground = physics.ground;
-    
+    var node = node.rigidBody;
+
     // Apply gravity
-    var gravity = getGravity(rigidBody.object.position);
+    var gravity = gravityUtils.getGravity(rigidBody.object.position);
     rigidBody.gravity = gravity;
     
     if(rigidBody.grounded) {
@@ -140,7 +97,8 @@ module.exports = function() {
     onAttach: onAttach,
     onDettach: onDettach,
     tick: tick,
-    ground: null
+    ground: null,
+    app: null
   };
 
   return physics;

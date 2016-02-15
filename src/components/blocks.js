@@ -152,6 +152,7 @@ module.exports = function(object, materials) {
   updateMesh();
 
   return {
+    type: 'blocks',
     updateMesh: updateMesh,
     palette: palette,
     offset: offset,

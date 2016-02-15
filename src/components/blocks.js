@@ -14,17 +14,6 @@ module.exports = function(object, materials) {
   var material = new THREE.MeshLambertMaterial();
   material.materials = materials;
 
-  function clear() {
-    for(var id in chunks) {
-      var chunk = chunks[id];
-      var mesh = chunk.mesh;
-      if (mesh != null) {
-        obj.remove(mesh);
-      }
-    }
-    chunks = {};
-  };
-
   object.add(obj);
 
   function updateMesh() {
@@ -35,18 +24,6 @@ module.exports = function(object, materials) {
         chunk.dirty = false;
       }
     }
-  };
-
-  function collisionMeshes() {
-    var meshes = [];
-    for (var id in chunks) {
-      var chunk = chunks[id];
-      var mesh = chunk.mesh;
-      if (!!mesh) {
-        meshes.push(mesh);
-      }
-    }
-    return meshes;
   };
 
   function updateChunk(chunk) {
@@ -149,10 +126,48 @@ module.exports = function(object, materials) {
     );
   };
 
-  updateMesh();
+  function setAtCoord(coord, b) {
+    set(coord.x, coord.y, coord.z, b);
+  };
+
+  function tick() {
+    updateMesh();
+  };
+
+  function clear() {
+    for (var id in chunks) {
+      var chunk = chunks[id];
+      var mesh = chunk.mesh;
+      if (mesh != null) {
+        obj.remove(mesh);
+      }
+    }
+    chunks = {};
+  };
+
+  function visit(callback) {
+    for (var id in chunks) {
+      var chunk = chunks[id];
+      var map = chunk.map;
+      var shape = map.shape;
+      var data = map.data;
+      var origin = chunk.origin;
+      for (var i = 0; i < shape[0]; i++) {
+        for (var j = 0; j < shape[1]; j++) {
+          for (var k = 0; k < shape[2]; k++) {
+            var b = map.get(i, j, k);
+            if (!!b) {
+              callback(i + origin.x, j + origin.y, k + origin.z, b);
+            }
+          }
+        }
+      }
+    }
+  };
 
   return {
     type: 'blocks',
+    tick: tick,
     updateMesh: updateMesh,
     palette: palette,
     offset: offset,
@@ -161,11 +176,15 @@ module.exports = function(object, materials) {
     pointToCoord: pointToCoord,
     coordToPoint: coordToPoint,
     getAtCoord: getAtCoord,
+    setAtCoord: setAtCoord,
     get material() {
       return material;
     },
-    collisionMeshes: collisionMeshes,
-    clear: clear
+    clear: clear,
+    get obj() {
+      return obj;
+    },
+    visit: visit
   };
 };
 

@@ -10,6 +10,7 @@ var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHei
 app.value('app', app);
 app.value('scene', scene);
 app.value('camera', camera);
+app.value('config', require('./data/config.json'));
 
 var textures = [
   THREE.ImageUtils.loadTexture('images/1.png'),
@@ -36,7 +37,7 @@ var container = document.getElementById('container');
 app.use(require('./systems/renderer')(scene, camera, container));
 app.use('input', require('./systems/input')(container));
 app.use(require('./voxel/voxel')());
-var devConsole = require('./systems/console')({
+var devConsole = require('./systems/devconsole')({
   onblur: function() {
     container.focus();
   }
@@ -44,9 +45,20 @@ var devConsole = require('./systems/console')({
 app.use('devConsole', devConsole);
 
 // Attach camera control
-app.attach(camera, require('./components/playerCamera'));
-app.loadAssembly(require('./assemblies/aground'));
-var player = app.loadAssembly(require('./assemblies/aplayer'));
-app.value('player', player);
+function loadGame() {
+  app.attach(camera, require('./components/playerCamera'));
+
+  app.loadAssembly(require('./assemblies/aground'));
+
+  var player = app.loadAssembly(require('./assemblies/aplayer'));
+  app.value('player', player);
+};
+
+function loadEditor() {
+  app.attach(camera, require('./components/dragcamera'));
+  app.loadAssembly(require('./assemblies/aeditor'));
+}
+
+loadEditor();
 
 app.start();

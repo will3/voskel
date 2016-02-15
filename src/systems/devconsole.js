@@ -86,14 +86,16 @@ module.exports = function(opts) {
     var command = commands[commandName];
     if (command == null) {
       addError(commandName + ': command not found');
-    }else {
+    } else {
       var result = command(parseArgs(args.split(' ')));
-      if(typeof result === 'string') {
+      if (typeof result === 'string') {
         addLog(result);
       }
     }
 
     input.value = '';
+
+    hide();
   };
 
   function addLog(line) {
@@ -124,20 +126,29 @@ module.exports = function(opts) {
     textSpan.innerHTML = text;
   };
 
+  function hide() {
+    div.hidden = true;
+    input.blur();
+    if (onblur != null) {
+      onblur();
+    }
+  };
+
+  function show() {
+    div.hidden = false;
+    input.value = input.value.split('`').join('');
+    input.focus();
+    if (onfocus != null) {
+      onfocus();
+    }
+  };
+
   window.addEventListener('keyup', function(e) {
     if (e.keyCode === 192) {
-      div.hidden = !div.hidden;
-      if (!div.hidden) {
-        input.value = input.value.split('`').join('');
-        input.focus();
-        if (onfocus != null) {
-          onfocus();
-        }
+      if (div.hidden) {
+        show();
       } else {
-        input.blur();
-        if (onblur != null) {
-          onblur();
-        }
+        hide();
       }
     }
   });

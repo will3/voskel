@@ -21,14 +21,9 @@ module.exports = function(app) {
   blocks.offset.set(-16, -16, -16);
   blocks.updateMesh();
 
-  var editor = app.attach(object, require('../components/editor'));
-  editor.blocks = blocks;
-
   var rigidBody = app.attach(object, require('../components/rigidbody'));
   rigidBody.collisionObject = blocks.object;
   rigidBody.isFixture = true;
   
   scene.add(object);
-
-  app.value('ground', blocks);
 };

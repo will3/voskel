@@ -1,38 +1,44 @@
 var THREE = require('three');
 
-module.exports = function(object, app, input, camera, devConsole) {
+module.exports = function(object, app, input, camera, devConsole, config) {
   "use strict";
 
   var raycaster = new THREE.Raycaster();
   var sn = 0.0001;
   var blocks = null;
+  var ground = null;
+  var tempBlocks = null;
 
   devConsole.commands['new'] = function(args) {
     var size = args._[0] || 16;
-    var halfSize = size / 2;
 
-    blocks.clear();
+    updateGround(size);
+  };
 
-    var dim = [size, size, size];
+  function updateGround(size) {
+    ground.clear();
+
+    var dim = [size, 2, size];
 
     for (var i = 0; i < dim[0]; i++) {
       for (var j = 0; j < dim[1]; j++) {
         for (var k = 0; k < dim[2]; k++) {
-          blocks.set(i, j, k, 1);
+          ground.set(i, j, k, 1);
         }
       }
     }
 
-    blocks.offset.set(-halfSize, -halfSize, -halfSize);
-    blocks.updateMesh();
-
-    var player = app.get('player');
-    player.position.set(0, size + 20, 0);
+    ground.offset.set(-dim[0] / 2, -dim[1] / 2, -dim[2] / 2);
+    ground.updateMesh();
   };
 
-  function getMouseCoord(mouse, delta) {
+  function getMouseCoord(delta) {
+    var mouse = input.mouse;
     raycaster.setFromCamera(mouse, camera);
-    var intersects = raycaster.intersectObjects(blocks.collisionMeshes());
+    var objects = [];
+    if (blocks.object != null) objects.push(blocks.obj);
+    if (ground.object != null) objects.push(ground.obj);
+    var intersects = raycaster.intersectObjects(objects, true);
 
     if (intersects.length === 0) {
       return undefined;
@@ -52,57 +58,98 @@ module.exports = function(object, app, input, camera, devConsole) {
 
   var lastMouse = new THREE.Vector2();
 
-  function addBlock(point) {
-    var coord = getMouseCoord(point, -sn);
+  var startCoord = null;
+  var endCoord = null;
 
-    if (!!coord) {
-      blocks.set(coord.x, coord.y, coord.z, 1);
-      blocks.updateMesh();
-    }
+  function start() {
+    ground = app.attach(object, require('./blocks'));
+    updateGround(config['editor_ground_size']);
+    blocks = app.attach(object, require('./blocks'));
+    tempBlocks = app.attach(object, require('./blocks'));
   };
 
-  function removeBlock(point) {
-    var coord = getMouseCoord(point, sn);
-
-    if (!!coord) {
-      blocks.set(coord.x, coord.y, coord.z, 0);
-      blocks.updateMesh();
-    }
-  };
+  var _started = false;
 
   function tick() {
+    if (!_started) {
+      start();
+      _started = true;
+    }
+
     var mouse = input.mouse.clone();
+    var coordA = getMouseCoord(-sn);
+    var coordB = getMouseCoord(sn);
 
-    if(input.mouseClick(0)) {
-      addBlock(mouse);
+    if (input.mouseClick(0)) {
+      blocks.setAtCoord(coordA, 1);
     }
 
-    if(input.mouseClick(2)) {
-      removeBlock(mouse);
+    if (input.mouseDown(0)) {
+      if (!!startCoord) {
+        commitTempBlocks();
+        startCoord = null;
+      }
     }
 
-    var dir = new THREE.Vector2().subVectors(mouse, lastMouse);
-    var distance = dir.length();
-    var gap = 1;
-    var interval = distance / gap;
-    
-    var step = dir.clone().setLength(gap);
-
-    if(input.mouseHold(0)) {
-      var point = lastMouse.clone();
-      for(var i = 0; i < interval; i ++) {
-        addBlock(point);
-        point.add(step);
+    if (input.mouseHold(0)) {
+      if(startCoord == null && !!coordA) {
+        startCoord = coordA.clone();
       }
 
-      lastMouse.copy(point);
+      endCoord = coordA;
+
+      if (!!startCoord && !!endCoord) {
+        updateTempBlocks();
+      }
     }
 
-    if(input.mouseHold(2)) {
-
+    if (input.keyDown('up')) {
+      if (!!startCoord && !!endCoord) {
+        endCoord.y++;
+        if (startCoord.y == endCoord.y) {
+          endCoord.y++;
+        }
+        updateTempBlocks();
+      }
     }
 
-    lastMouse = mouse;
+    if (input.keyDown('down')) {
+      if (!!startCoord && !!endCoord) {
+        endCoord.y--;
+        if (startCoord.y == endCoord.y) {
+          endCoord.y--;
+        }
+        updateTempBlocks();
+      }
+    }
+
+  };
+
+  function updateTempBlocks() {
+    tempBlocks.clear();
+    visitBound(startCoord, endCoord, function(i, j, k) {
+      tempBlocks.set(i, j, k, 1);
+    });
+  };
+
+  function commitTempBlocks() {
+    tempBlocks.visit(function(i, j, k, b) {
+      blocks.set(i, j, k, b);
+    });
+    tempBlocks.clear();
+  };
+
+  function visitBound(lo, hi, callback) {
+    var xs = hi.x > lo.x ? [lo.x, hi.x] : [hi.x, lo.x];
+    var ys = hi.y > lo.y ? [lo.y, hi.y] : [hi.y, lo.y];
+    var zs = hi.z > lo.z ? [lo.z, hi.z] : [hi.z, lo.z];
+    for (var i = xs[0]; i <= xs[1]; i++) {
+      for (var j = ys[0]; j <= ys[1]; j++) {
+        for (var k = zs[0]; k <= zs[1]; k++) {
+          callback(i, j, k);
+        }
+      }
+    }
   };
 
   var editor = {
@@ -115,4 +162,4 @@ module.exports = function(object, app, input, camera, devConsole) {
   return editor;
 };
 
-module.exports.$inject = ['app', 'input', 'camera', 'devConsole'];
+module.exports.$inject = ['app', 'input', 'camera', 'devConsole', 'config'];

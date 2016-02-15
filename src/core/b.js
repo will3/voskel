@@ -1,3 +1,5 @@
+var events = require('./events');
+
 module.exports = function() {
   "use strict";
 
@@ -25,7 +27,7 @@ module.exports = function() {
       });
     }
 
-    var component = new (Function.prototype.bind.apply(factory, [null].concat(args)));
+    var component = new(Function.prototype.bind.apply(factory, [null].concat(args)));
 
     if (component != null) {
       component.object = object;
@@ -46,14 +48,14 @@ module.exports = function() {
 
   function use(type, system) {
     var hasType = typeof type === 'string';
-    if(!hasType) {
+    if (!hasType) {
       system = type;
     }
 
     if (system != null) {
       systems.push(system);
-      if(hasType) {
-        value(type, system); 
+      if (hasType) {
+        value(type, system);
       }
     }
 
@@ -146,6 +148,8 @@ module.exports = function() {
     registerComponent: registerComponent,
     createComponent: createComponent
   };
+
+  events.prototype.apply(app);
 
   return app;
 };

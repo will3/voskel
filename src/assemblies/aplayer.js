@@ -6,6 +6,7 @@ module.exports = function(app) {
   var object = new THREE.Object3D();
   var character = app.attach(object, require('../components/character'));
   var rigidBody = app.attach(object, require('../components/rigidbody'));
+  rigidBody.mass = 1;
   var playerControl = app.attach(object, require('../components/playercontrol'));
 
   character.rigidBody = rigidBody;
@@ -16,8 +17,5 @@ module.exports = function(app) {
 
   object.position.set(0, 40, 0);
 
-  app.value('player', {
-    rigidBody: rigidBody,
-    object: object
-  });
+  return object;
 };

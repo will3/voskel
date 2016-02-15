@@ -24,7 +24,8 @@ module.exports = function() {
         args.push(resolve(dep));
       });
     }
-    var component = factory.apply(null, args);
+
+    var component = new (Function.prototype.bind.apply(factory, [null].concat(args)));
 
     if (component != null) {
       component.object = object;
@@ -43,10 +44,19 @@ module.exports = function() {
     return component;
   };
 
-  function use(system) {
+  function use(type, system) {
+    var hasType = typeof type === 'string';
+    if(!hasType) {
+      system = type;
+    }
+
     if (system != null) {
       systems.push(system);
+      if(hasType) {
+        value(type, system); 
+      }
     }
+
     return system;
   };
 
@@ -107,7 +117,7 @@ module.exports = function() {
   var entities = {};
 
   function loadAssembly(assembly) {
-    assembly(this);
+    return assembly(this);
   };
 
   var componentBindings = {};

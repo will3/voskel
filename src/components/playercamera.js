@@ -17,7 +17,8 @@ module.exports = function(camera, app) {
       return;
     }
 
-    var rigidBody = player.rigidBody;
+    var rigidBody = app.getComponent(player, 'rigidBody');
+
     var gravityDir;
     if(rigidBody.grounded) {
       gravityDir = rigidBody.gravity.dir.clone();

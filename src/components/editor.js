@@ -27,7 +27,7 @@ module.exports = function(object, app, input, camera, devConsole) {
     blocks.updateMesh();
 
     var player = app.get('player');
-    player.object.position.set(0, size + 20, 0);
+    player.position.set(0, size + 20, 0);
   };
 
   function getMouseCoord(mouse, delta) {

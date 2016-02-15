@@ -1,4 +1,5 @@
 var THREE = require('three');
+var b = require('./core/b');
 
 var app = b();
 
@@ -31,29 +32,21 @@ for (var i = 0; i < textures.length; i++) {
 app.value('textures', textures);
 app.value('materials', materials);
 
-// Attach camera control
-app.attach(camera, require('./components/playerCamera'));
-
 var container = document.getElementById('container');
-
 app.use(require('./systems/renderer')(scene, camera, container));
-var input = app.use(require('./systems/input')(container));
-app.value('input', input);
-
-var voxel = require('./voxel/voxel')();
-app.use(voxel);
-
+app.use('input', require('./systems/input')(container));
+app.use(require('./voxel/voxel')());
 var devConsole = require('./systems/console')({
   onblur: function() {
     container.focus();
   }
 });
-app.use(devConsole);
-app.value('devConsole', devConsole);
+app.use('devConsole', devConsole);
 
+// Attach camera control
+app.attach(camera, require('./components/playerCamera'));
 app.loadAssembly(require('./assemblies/aground'));
-app.loadAssembly(require('./assemblies/aplayer'));
-
-voxel.ground = app.get('ground');
+var player = app.loadAssembly(require('./assemblies/aplayer'));
+app.value('player', player);
 
 app.start();

@@ -1,3 +1,5 @@
+var Gravity = require('./gravity');
+
 var gravities = {
   none: new Gravity(),
   right: new Gravity(new THREE.Vector3(1, 0, 0).normalize(), 'x', true),

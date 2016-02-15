@@ -24,6 +24,10 @@ module.exports = function(app) {
   var editor = app.attach(object, require('../components/editor'));
   editor.blocks = blocks;
 
+  var rigidBody = app.attach(object, require('../components/rigidbody'));
+  rigidBody.collisionObject = blocks.object;
+  rigidBody.isFixture = true;
+  
   scene.add(object);
 
   app.value('ground', blocks);

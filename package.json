@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha src/test --recursive --watch",
     "build": "watchify src/main.js -o js/bundle.js --verbose --debug"
   },
   "author": "",
@@ -13,6 +13,9 @@
     "browserify": "^13.0.0",
     "browserify-shim": "^3.8.12",
     "chai": "^3.5.0",
+    "grunt-concurrent": "^2.1.0",
+    "grunt-shell": "^1.1.2",
+    "load-grunt-tasks": "^3.4.0",
     "three": "^0.73.2",
     "voxel": "^0.5.0"
   },

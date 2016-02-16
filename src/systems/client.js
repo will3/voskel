@@ -16,6 +16,9 @@ var Client = function(arg) {
   this.state = null;
 
   this.app = null;
+
+  // List of rpcs to send to server
+  this._pendingServerFuncs = [];
 };
 
 Client.prototype.start = function() {
@@ -31,9 +34,23 @@ Client.prototype.start = function() {
   });
 };
 
+Client.prototype.tick = function() {
+  this.socket.emit('serverFunc', this._pendingServerFuncs);
+  this._pendingServerFuncs = [];
+};
+
 Client.prototype.on = function() {
   var args = Array.prototype.slice.call(arguments, 0);
   this.socket.on.apply(this.socket, args);
+};
+
+Client.prototype.runServerfunc = function(id, func, args) {
+  var rpc = {
+    id: id,
+    func: func,
+    args: args
+  };
+  this._pendingServerFuncs.push(rpc);
 };
 
 module.exports = function(arg) {

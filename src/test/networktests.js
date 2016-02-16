@@ -5,13 +5,12 @@ var jsondiffpatch = require('jsondiffpatch');
 
 // Generates a free port
 var counter = 55100;
-
 function getPort() {
   counter++;
   return counter;
 };
 
-describe('Channel', function() {
+describe('Network', function() {
   describe('Server', function() {
     it('should send state', function(done) {
       var port = getPort();

@@ -46,6 +46,17 @@ Server.prototype.start = function() {
     socket.on('state-ack', function(data) {
       client.lastAck = data;
     });
+
+    socket.on('serverFunc', function(data) {
+      for (var id in data) {
+        var rpcs = data[id];
+        for (var i = 0; i < rpcs.length; i++) {
+          var rpc = rpcs[i];
+          var object = this.app.getById(id);
+          object[rpc.func].call(object, rpc.args);
+        }
+      }
+    });
   });
 
   io.on('disconnect', function(socket) {

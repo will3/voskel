@@ -1,6 +1,7 @@
 var THREE = require('three');
 var b = require('./core/b');
 var cpr = require('./cpr/cpr');
+var stats = require('./services/stats');
 
 cpr({
   palette: ['#ff0000', '#00ff00', '#0000ff']
@@ -29,6 +30,8 @@ var devConsole = require('./services/devconsole')({
   }
 });
 app.value('devConsole', devConsole);
+
+stats(app);
 
 // Attach camera control
 function loadGame() {

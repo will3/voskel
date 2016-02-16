@@ -1,43 +1,53 @@
 var events = require('./events');
-var Stats = require('stats.js');
 
 var modules = {};
 
 module.exports = function(name) {
   "use strict";
 
-  function guid() {
-    function s4() {
-      return Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16)
-        .substring(1);
-    }
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-      s4() + '-' + s4() + s4() + s4();
+  var idCount = 0;
+
+  function getNextId() {
+    return idCount++;
   }
 
   var app = {};
-  var map = {};
+  var entityMap = {};
+  var lookup = {};
   var frameRate = 60.0;
   var systems = [];
   var bindings = {};
 
   function attach(object, factory) {
     var args = [object];
-    if (factory.$inject != null) {
-      factory.$inject.forEach(function(dep) {
-        args.push(resolve(dep));
-      });
-    }
+    var component;
 
-    var component = new(Function.prototype.bind.apply(factory, [null].concat(args)));
+    if (typeof factory === 'function') {
+      if (factory.$inject != null) {
+        factory.$inject.forEach(function(dep) {
+          args.push(resolve(dep));
+        });
+      }
+      component = new(Function.prototype.bind.apply(factory, [null].concat(args)));
+    } else {
+      component = factory;
+    }
 
     if (component != null) {
       component.object = object;
-      if (object._id == null) object._id = guid();
-      if (component._id == null) component._id = guid();
-      var components = map[object._id];
-      if (components == null) components = map[object._id] = {};
+
+      if (object._id == null) {
+        object._id = getNextId();
+        lookup[object._id] = object;
+      }
+
+      if (component._id == null) {
+        component._id = getNextId();
+        lookup[component._id] = component;
+      }
+
+      var components = entityMap[object._id];
+      if (components == null) components = entityMap[object._id] = {};
       components[component._id] = component;
 
       for (var i = 0; i < systems.length; i++) {
@@ -66,14 +76,15 @@ module.exports = function(name) {
   };
 
   function tick() {
-    stats.begin();
+    app.emit('beforeTick');
+
     for (var i = 0; i < systems.length; i++) {
       var system = systems[i];
       if (system.tick != null) system.tick();
     }
 
-    for (var i in map) {
-      var components = map[i];
+    for (var i in entityMap) {
+      var components = entityMap[i];
       for (var j in components) {
         var component = components[j];
         if (component.tick != null) component.tick();
@@ -85,8 +96,9 @@ module.exports = function(name) {
       if (system.lateTick != null) system.lateTick();
     }
 
+    app.emit('afterTick');
+
     setTimeout(tick, 1000 / frameRate);
-    stats.end();
   };
 
   function start() {
@@ -112,7 +124,7 @@ module.exports = function(name) {
   };
 
   function getComponent(object, type) {
-    var components = map[object._id];
+    var components = entityMap[object._id];
     for (var id in components) {
       if (components[id].type === type) {
         return components[id];
@@ -130,37 +142,16 @@ module.exports = function(name) {
 
   var componentBindings = {};
 
-  function registerComponent(type, constructor) {
-    componentBindings[type] = constructor;
-  };
-
-  function createComponent(type) {
-    var constructor = componentBindings[type];
-    if (constructor == null) {
-      throw new Error('binding not found for type: ' + type);
-    }
-    var component = new constructor();
-    component.app = this;
-  };
-
   var app = {
     start: start,
+    tick: tick,
     use: use,
     attach: attach,
     value: value,
     getComponent: getComponent,
     loadAssembly: loadAssembly,
-    get: resolve,
-    registerComponent: registerComponent,
-    createComponent: createComponent
+    get: resolve
   };
-
-  var stats = new Stats();
-  stats.domElement.style.position = 'absolute';
-  stats.domElement.style.right = '0px';
-  stats.domElement.style.bottom = '40px';
-
-  document.body.appendChild(stats.domElement);
 
   events.prototype.apply(app);
 

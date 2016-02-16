@@ -12,7 +12,7 @@ module.exports = function(app) {
   var stats = new Stats();
   stats.domElement.style.position = 'absolute';
   stats.domElement.style.right = '0px';
-  stats.domElement.style.bottom = '40px';
+  stats.domElement.style.bottom = '50px';
   document.body.appendChild(stats.domElement);
 
   return stats.domElement;

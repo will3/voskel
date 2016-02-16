@@ -3,13 +3,16 @@ module.exports = function(grunt) {
     shell: {
       build: {
         command: 'npm run build'
+      },
+      open: {
+        command: 'open http://localhost:9000/index.html'
       }
     },
     serve: {
 
     },
     concurrent: {
-      dev: ['serve', 'shell'],
+      dev: ['shell:open', 'serve', 'shell:build'],
       options: {
         logConcurrentOutput: true
       }

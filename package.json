@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha src/test",
+    "test": "mocha src/test --recursive --watch",
     "build": "watchify src/main.js -o js/bundle.js --verbose --debug"
   },
   "author": "",

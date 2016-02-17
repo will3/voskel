@@ -87,12 +87,16 @@ module.exports = function(opts) {
     if (command == null) {
       addError(commandName + ': command not found');
     } else {
-      var result = command(parseArgs(args.split(' ')));
-      if (typeof result === 'string') {
-        addLog(result);
-      }
+      try {
+        var result = command(parseArgs(args.split(' ')));
+        if (typeof result === 'string') {
+          addLog(result);
+        }
 
-      hide();
+        hide();
+      } catch (err) {
+        addError(err);
+      }
     }
 
     input.value = '';

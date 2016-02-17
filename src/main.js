@@ -1,11 +1,6 @@
 var THREE = require('three');
 var b = require('./core/b');
-var cpr = require('./cpr/cpr');
 var stats = require('./services/stats');
-
-cpr({
-  palette: ['#ff0000', '#00ff00', '#0000ff']
-});
 
 var app = b('main');
 
@@ -17,6 +12,7 @@ app.value('app', app);
 app.value('scene', scene);
 app.value('camera', camera);
 app.value('config', require('./data/config.json'));
+app.value('palette', require('./data/palette.json'));
 app.value('materials', require('./services/materials'));
 
 var container = document.getElementById('container');
@@ -44,7 +40,6 @@ function loadGame() {
 };
 
 function loadEditor() {
-  app.attach(camera, require('./components/dragcamera'));
   app.loadAssembly(require('./assemblies/aeditor'));
 }
 

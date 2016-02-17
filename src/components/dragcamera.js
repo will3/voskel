@@ -1,58 +1,76 @@
 var THREE = require('three');
 
-module.exports = function(camera, input) {
-  "use strict";
+var DragCamera = function(camera, input) {
+  this.camera = camera;
+  this.input = input;
 
-  var rotation = new THREE.Euler(-Math.PI / 4, Math.PI / 4, 0, 'YXZ');
-  var lastMouse = new THREE.Vector2();
-  var mouseSpeedX = 0.01;
-  var mouseSpeedY = 0.01;
-  var unitVector = new THREE.Vector3(0, 0, 1);
-  var distance = 50;
-  var target = new THREE.Vector3(0, 0, 0);
-  var maxPitch = Math.PI / 2 - 0.01;
-  var minPitch = -Math.PI / 2 + 0.01;
-  var zoomRate = 1.1;
+  this.rotation = new THREE.Euler(-Math.PI / 4, Math.PI / 4, 0, 'YXZ');
+  this.lastMouse = new THREE.Vector2();
+  this.mouseSpeedX = 0.01;
+  this.mouseSpeedY = 0.01;
+  this.mouseKeySpeedX = 0.03;
+  this.mouseKeySpeedY = 0.03;
+  this.unitVector = new THREE.Vector3(0, 0, 1);
+  this.distance = 50;
+  this.target = new THREE.Vector3(0, 0, 0);
+  this.maxPitch = Math.PI / 2 - 0.01;
+  this.minPitch = -Math.PI / 2 + 0.01;
+  this.zoomRate = 1.1;
 
-  function tick() {
-    var needsUpdate = false;
-    if (input.keyHold('alt') && input.mouseHold(0)) {
-      var diff = new THREE.Vector2().subVectors(input.mouse, lastMouse);
-      rotation.y += diff.x * mouseSpeedX;
-      rotation.x += diff.y * mouseSpeedY;
+  this.lockRotation = false;
 
-      if (rotation.x < minPitch) rotation.x = minPitch;
-      if (rotation.x > maxPitch) rotation.x = maxPitch;
+  this.updateCamera();
+};
 
-      needsUpdate = true;
-    }
+DragCamera.$inject = ['input'];
 
-    lastMouse.copy(input.mouse);
+DragCamera.prototype.tick = function() {
+  this.processInput();
 
-    if (input.keyUp('=')) {
-      distance /= zoomRate;
-      needsUpdate = true;
-    } else if (input.keyUp('-')) {
-      distance *= zoomRate;
-      needsUpdate = true;
-    }
+  this.updateCamera();
+};
 
-    if (needsUpdate) {
-      updateCamera();
-    }
-  };
+DragCamera.prototype.processInput = function() {
+  if (this.input.mouseHold() && !this.lockRotation) {
+    var diff = new THREE.Vector2().subVectors(this.input.mouse, this.lastMouse);
+    this.rotation.y += diff.x * this.mouseSpeedY;
+    this.rotation.x += diff.y * this.mouseSpeedX;
 
-  function updateCamera() {
-    var position = unitVector.clone().applyEuler(rotation).setLength(distance).add(target);
-    camera.position.copy(position);
-    camera.lookAt(target);
-  };
+    if (this.rotation.x < this.minPitch) this.rotation.x = this.minPitch;
+    if (this.rotation.x > this.maxPitch) this.rotation.x = this.maxPitch;
+  }
 
-  updateCamera();
+  var rotateRight = 0;
+  var rotateUp = 0;
+  if (this.input.keyHold('right')) {
+    rotateRight++;
+  }
+  if (this.input.keyHold('left')) {
+    rotateRight--;
+  }
+  if (this.input.keyHold('up')) {
+    rotateUp++;
+  }
+  if (this.input.keyHold('down')) {
+    rotateUp--;
+  }
 
-  return {
-    tick: tick
+  this.rotation.x += rotateUp * this.mouseKeySpeedX;
+  this.rotation.y -= rotateRight * this.mouseKeySpeedY;
+
+  this.lastMouse.copy(this.input.mouse);
+
+  if (this.input.keyUp('=')) {
+    this.distance /= this.zoomRate;
+  } else if (this.input.keyUp('-')) {
+    this.distance *= this.zoomRate;
   }
 };
 
-module.exports.$inject = ['input'];
+DragCamera.prototype.updateCamera = function() {
+  var position = this.unitVector.clone().applyEuler(this.rotation).setLength(this.distance).add(this.target);
+  this.camera.position.copy(position);
+  this.camera.lookAt(this.target);
+};
+
+module.exports = DragCamera;

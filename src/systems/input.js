@@ -76,34 +76,55 @@ module.exports = function(element) {
     mouse: mouse,
 
     mouseDown: function(button) {
+      if (button === undefined) {
+        return mousedowns.length > 0;
+      }
       return arrayUtils.includes(mousedowns, button);
     },
 
     mouseUp: function(button) {
+      if (button === undefined) {
+        return mouseups.length > 0;
+      }
       return arrayUtils.includes(mouseups, button);
     },
 
     mouseHold: function(button) {
+      if (button === undefined) {
+        return mouseholds.length > 0;
+      }
       return arrayUtils.includes(mouseholds, button);
     },
 
     mouseClick: function(button) {
+      if (button === undefined) {
+        return mouseclicks.length > 0;
+      }
       return arrayUtils.includes(mouseclicks, button);
     },
 
     keyDown: function(key) {
+      if (key === undefined) {
+        return keydowns.length > 0;
+      }
       return arrayUtils.includes(keydowns, key);
     },
 
     keyUp: function(key) {
+      if (key === undefined) {
+        return keyups.length > 0;
+      }
       return arrayUtils.includes(keyups, key);
     },
 
     keyHold: function(key) {
+      if (key === undefined) {
+        return keyholds.length > 0;
+      }
       return arrayUtils.includes(keyholds, key);
     },
 
-    get mouseMove() {
+    mouseMove: function() {
       return mousemove;
     },
 

@@ -1,13 +1,13 @@
 var THREE = require('three');
 
 module.exports = function(app) {
-	var scene = app.get('scene');
+  var scene = app.get('scene');
 
-	var object = new THREE.Object3D();
+  var object = new THREE.Object3D();
 
-	var editor = app.attach(object, require('../components/editor'));
+  var editor = app.attach(object, require('../components/editor'));
 
-	scene.add(object);
-	
-	return object;
+  scene.add(object);
+
+  return object;
 };

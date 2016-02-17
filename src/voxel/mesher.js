@@ -138,11 +138,14 @@ module.exports = function(data, dim, voxelSideTextureIds) {
 
   function getVoxel(i, j, k, d) {
     if (d === 0) {
-      return data[k + (j + i * dim[0]) * dim[1]];
+      return data(i, j, k);
+      // return data[k + (j + i * dim[0]) * dim[1]];
     } else if (d === 1) {
-      return data[j + (i + k * dim[0]) * dim[1]];
+      return data(k, i, j);
+      // return data[j + (i + k * dim[0]) * dim[1]];
     } else if (d === 2) {
-      return data[i + (k + j * dim[0]) * dim[1]];
+      return data(j, k, i);
+      // return data[i + (k + j * dim[0]) * dim[1]];
     }
   };
 

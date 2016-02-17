@@ -2,7 +2,7 @@ module.exports = function(opts) {
   opts = opts || {};
   var columns = opts.columns || 4;
   var palette = opts.palette || [];
-  var onpick = opts.onpick || function() {};
+  var onPick = opts.onPick || function() {};
   var blockWidth = 20;
   var blockHeight = 20;
 
@@ -11,6 +11,10 @@ module.exports = function(opts) {
   container.style.left = '20px';
   container.style.bottom = '20px';
   document.body.appendChild(container);
+
+  container.onfocus = function() {
+    container.style['outline'] = 'none';
+  };
 
   var blocks = [];
 
@@ -72,11 +76,18 @@ module.exports = function(opts) {
     var row = Math.floor(mouseY / blockHeight);
     var column = Math.floor(mouseX / blockWidth);
     var index = getIndex(row, column);
+
+    if(index >= palette.length) {
+      return;
+    }
+
     var color = palette[index];
     highlight(index);
 
-    onpick(color);
+    onPick(color, index);
   });
+
+  highlight(0);
 
   return container;
 };

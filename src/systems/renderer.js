@@ -2,7 +2,7 @@ var Stats = require('stats.js');
 
 module.exports = function(scene, camera, container) {
   var renderer = new THREE.WebGLRenderer();
-  renderer.setClearColor(0xf6f6f6);
+  renderer.setClearColor(0x333333);
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   container = container || document.body;
@@ -20,7 +20,9 @@ module.exports = function(scene, camera, container) {
 
   document.body.appendChild(stats.domElement);
 
-  var ambient = new THREE.AmbientLight(new THREE.Color("rgb(40%, 40%, 40%)"));
+  var ssao = true;
+
+  var ambient = new THREE.AmbientLight(new THREE.Color("rgb(60%, 60%, 60%)"));
   var light = new THREE.DirectionalLight(0xffffff, 0.6);
   light.position.set(0.8, 1, 0.5);
   scene.add(light);
@@ -31,13 +33,18 @@ module.exports = function(scene, camera, container) {
 
     stats.begin();
 
-    // Render depth into depthRenderTarget
-    scene.overrideMaterial = depthMaterial;
-    renderer.render(scene, camera, depthRenderTarget, true);
+    if (ssao) {
+      // Render depth into depthRenderTarget
+      scene.overrideMaterial = depthMaterial;
+      renderer.render(scene, camera, depthRenderTarget, true);
 
-    // Render renderPass and SSAO shaderPass
-    scene.overrideMaterial = null;
-    effectComposer.render();
+      // Render renderPass and SSAO shaderPass
+      scene.overrideMaterial = null;
+      effectComposer.render();
+    } else {
+      renderer.render(scene, camera);
+    }
+
 
     stats.end();
   };

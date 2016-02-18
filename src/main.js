@@ -46,3 +46,13 @@ function loadEditor() {
 loadEditor();
 
 app.start();
+
+var canvas = document.getElementById('canvas');
+app.on('beforeTick', function() {
+  if (canvas.width !== window.innerWidth) {
+    canvas.width = window.innerWidth;
+  }
+  if (canvas.height !== window.innerHeight) {
+    canvas.height = window.innerHeight;
+  }
+});

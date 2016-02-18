@@ -1,4 +1,5 @@
 var parseArgs = require('minimist');
+var keycode = require('keycode');
 
 module.exports = function(opts) {
   opts = opts || {};
@@ -96,6 +97,7 @@ module.exports = function(opts) {
         hide();
       } catch (err) {
         addError(err);
+        console.error(err.stack);
       }
     }
 
@@ -148,7 +150,8 @@ module.exports = function(opts) {
   };
 
   window.addEventListener('keyup', function(e) {
-    if (e.keyCode === 192) {
+    var key = keycode(e);
+    if (key === '`') {
       if (div.hidden) {
         show();
       } else {
@@ -160,7 +163,14 @@ module.exports = function(opts) {
   // Hidden by default
   div.hidden = true;
 
+  function loadCommands(value) {
+    for (var i in value) {
+      commands[i] = value[i];
+    }
+  };
+
   return {
-    commands: commands
+    commands: commands,
+    loadCommands: loadCommands
   };
 };

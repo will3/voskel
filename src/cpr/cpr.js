@@ -77,7 +77,7 @@ module.exports = function(opts) {
     var column = Math.floor(mouseX / blockWidth);
     var index = getIndex(row, column);
 
-    if(index >= palette.length) {
+    if (index >= palette.length) {
       return;
     }
 
@@ -89,5 +89,7 @@ module.exports = function(opts) {
 
   highlight(0);
 
-  return container;
+  return {
+    highlight: highlight
+  }
 };

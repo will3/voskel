@@ -5,7 +5,7 @@ module.exports = function(app) {
 
   var object = new THREE.Object3D();
 
-  var editor = app.attach(object, require('../components/editor'));
+  var editor = app.attach(object, require('../editor/editor'));
 
   scene.add(object);
 

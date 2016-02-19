@@ -1,165 +1,152 @@
 var events = require('./events');
 
-var modules = {};
+var idCount = 0;
 
-module.exports = function(name) {
-  "use strict";
+function getNextId() {
+  return idCount++;
+}
 
-  var idCount = 0;
-
-  function getNextId() {
-    return idCount++;
-  }
-
-  var app = {};
-  var entityMap = {};
-  var lookup = {};
-  var frameRate = 60.0;
-  var systems = [];
-  var bindings = {};
-
-  function attach(object, factory) {
-    var args = [object];
-    var component;
-
-    if (typeof factory === 'function') {
-      if (factory.$inject != null) {
-        factory.$inject.forEach(function(dep) {
-          args.push(resolve(dep));
-        });
-      }
-      component = new(Function.prototype.bind.apply(factory, [null].concat(args)));
-    } else {
-      component = factory;
-    }
-
-    if (component != null) {
-      component.object = object;
-
-      if (object._id == null) {
-        object._id = getNextId();
-        lookup[object._id] = object;
-      }
-
-      if (component._id == null) {
-        component._id = getNextId();
-        lookup[component._id] = component;
-      }
-
-      var components = entityMap[object._id];
-      if (components == null) components = entityMap[object._id] = {};
-      components[component._id] = component;
-
-      for (var i = 0; i < systems.length; i++) {
-        var system = systems[i];
-        if (system.onAttach != null) system.onAttach(object, component);
-      }
-    }
-
-    return component;
-  };
-
-  function use(type, system) {
-    var hasType = typeof type === 'string';
-    if (!hasType) {
-      system = type;
-    }
-
-    if (system != null) {
-      systems.push(system);
-      if (hasType) {
-        value(type, system);
-      }
-    }
-
-    return system;
-  };
-
-  function tick() {
-    app.emit('beforeTick');
-
-    for (var i = 0; i < systems.length; i++) {
-      var system = systems[i];
-      if (system.tick != null) system.tick();
-    }
-
-    for (var i in entityMap) {
-      var components = entityMap[i];
-      for (var j in components) {
-        var component = components[j];
-        if (component.tick != null) component.tick();
-      }
-    }
-
-    for (var i = 0; i < systems.length; i++) {
-      var system = systems[i];
-      if (system.lateTick != null) system.lateTick();
-    }
-
-    app.emit('afterTick');
-
-    setTimeout(tick, 1000 / frameRate);
-  };
-
-  function start() {
-    // Start loop
-    tick();
-  };
-
-  function value(type, object) {
-    bindings[type] = {
-      value: object
-    };
-  };
-
-  function resolve(type) {
-    var binding = bindings[type];
-    if (binding == null) {
-      throw new Error('binding for type ' + type + ' not found');
-    }
-    if (binding.value != null) {
-      return binding.value;
-    }
-    return undefined;
-  };
-
-  function getComponent(object, type) {
-    var components = entityMap[object._id];
-    for (var id in components) {
-      if (components[id].type === type) {
-        return components[id];
-      }
-    }
-  };
-
-  var entityBindings = {};
-  var entityIdCount = 0;
-  var entities = {};
-
-  function loadAssembly(assembly) {
-    return assembly(this);
-  };
-
-  var componentBindings = {};
-
-  var app = {
-    start: start,
-    tick: tick,
-    use: use,
-    attach: attach,
-    value: value,
-    getComponent: getComponent,
-    loadAssembly: loadAssembly,
-    get: resolve
-  };
-
-  events.prototype.apply(app);
-
-  if (name != null) {
-    modules[name] = app;
-  }
-
-  return app;
+var Engine = function() {
+  this.entityMap = {};
+  this.lookup = {};
+  this.frameRate = 60.0;
+  this.systems = [];
+  this.bindings = {};
 };
 
-module.exports.modules = modules;
+Engine.prototype.attach = function(object, factory) {
+  var args = [object];
+  var component;
+  var self = this;
+
+  if (typeof factory === 'function') {
+    if (factory.$inject != null) {
+      factory.$inject.forEach(function(dep) {
+        args.push(self.resolve(dep));
+      });
+    }
+    component = new(Function.prototype.bind.apply(factory, [null].concat(args)));
+  } else {
+    component = factory;
+  }
+
+  if (component != null) {
+    component.object = object;
+
+    if (object._id == null) {
+      object._id = getNextId();
+      this.lookup[object._id] = object;
+    }
+
+    if (component._id == null) {
+      component._id = getNextId();
+      this.lookup[component._id] = component;
+    }
+
+    var components = this.entityMap[object._id];
+    if (components == null) components = this.entityMap[object._id] = {};
+    components[component._id] = component;
+
+    for (var i = 0; i < this.systems.length; i++) {
+      var system = this.systems[i];
+      if (system.onAttach != null) system.onAttach(object, component);
+    }
+  }
+
+  return component;
+};
+
+Engine.prototype.use = function(type, system) {
+  var hasType = typeof type === 'string';
+  if (!hasType) {
+    system = type;
+  }
+
+  if (system != null) {
+    this.systems.push(system);
+    if (hasType) {
+      this.value(type, system);
+    }
+  }
+
+  return system;
+};
+
+Engine.prototype.tick = function() {
+  app.emit('beforeTick');
+
+  for (var i = 0; i < this.systems.length; i++) {
+    var system = this.systems[i];
+    if (system.tick != null) system.tick();
+  }
+
+  for (var i in this.entityMap) {
+    var components = this.entityMap[i];
+    for (var j in components) {
+      var component = components[j];
+      if (component.tick != null) component.tick();
+    }
+  }
+
+  for (var i = 0; i < this.systems.length; i++) {
+    var system = this.systems[i];
+    if (system.lateTick != null) system.lateTick();
+  }
+
+  app.emit('afterTick');
+};
+
+Engine.prototype.start = function() {
+  var self = this;
+  var interval = function() {
+    self.tick();
+    setTimeout(interval, 1000 / this.frameRate);
+  }
+  interval;
+};
+
+Engine.prototype.value = function(type, object) {
+  this.bindings[type] = {
+    value: object
+  };
+};
+
+Engine.prototype.resolve = function(type, context) {
+  var binding = this.bindings[type];
+  if (binding == null) {
+    throw new Error('binding for type ' + type + ' not found');
+  }
+
+  if (binding.factory != null) {
+    return binding.factory(context);
+  }
+
+  if (binding.value != null) {
+    return binding.value;
+  }
+
+  return undefined;
+};
+
+Engine.prototype.get = function(type, context) {
+  return this.resolve(type, context);
+};
+
+Engine.prototype.getComponent = function(object, type) {
+  var components = this.entityMap[object._id];
+  for (var id in components) {
+    if (components[id].type === type) {
+      return components[id];
+    }
+  }
+};
+
+Engine.prototype.loadAssembly = function(assembly) {
+  return assembly(this);
+};
+
+events.prototype.apply(Engine.prototype);
+
+modules.exports = function() {
+  return new Engine();
+};

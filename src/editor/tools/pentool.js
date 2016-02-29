@@ -45,7 +45,7 @@ PenTool.prototype.tick = function() {
     this.objShadowNeedsUpdate = false;
   }
 
-  if (this.input.mouseClick(0)) {
+  if (this.input.mouseDown(0)) {
     var selectedIndex = this.blocks.getOrAddColorIndex(this.editor.selectedColor);
 
     var coord = this.getCoordToAdd(this.input.mouse);
@@ -57,7 +57,7 @@ PenTool.prototype.tick = function() {
     }
   }
 
-  if (this.input.mouseClick(2)) {
+  if (this.input.mouseDown(2)) {
     var selectedIndex = this.blocks.getOrAddColorIndex(this.editor.selectedColor);
 
     var coord = this.getCoordToRemove(this.input.mouse);

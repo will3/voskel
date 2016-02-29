@@ -2,8 +2,8 @@ module.exports = function(opts) {
   opts = opts || {};
   var palette = opts.palette || [];
   var onPick = opts.onPick || function() {};
-  var blockWidth = 20;
-  var blockHeight = 20;
+  var blockWidth = opts.blockWidth || 20;
+  var blockHeight = opts.blockHeight || 20;
 
   var container = document.createElement('div');
   container.style.position = 'absolute';
@@ -28,17 +28,47 @@ module.exports = function(opts) {
 
   function addColorBlock(row, column, color) {
     var div = document.createElement('div');
-    div.style.position = 'absolute';
-    div.style.left = column * blockWidth + 'px';
-    div.style.top = row * blockHeight + 'px';
-    div.style.width = blockWidth + 'px';
-    div.style.height = blockHeight + 'px';
     div.style.backgroundColor = color;
-    div.style.display = 'inline-block';
+    position(div, row, column);
     container.appendChild(div);
 
     var columns = blocks[row] || (blocks[row] = []);
     columns[column] = div;
+  };
+
+  function add(row, column, obj) {
+    var identifier;
+    var element;
+
+    if (obj.imgData != null) {
+      element = document.createElement('img');
+      position(element, row, column);
+      element.src = obj.imgData;
+      container.appendChild(element);
+
+      identifier = obj.identifier;
+    }
+
+    if (blocks[row] == null) {
+      blocks[row] = [];
+    }
+    blocks[row][column] = element;
+
+    if (palette[row] == null) {
+      palette[row] = [];
+    }
+    palette[row][column] = identifier;
+
+    updateContainer();
+  };
+
+  function position(element, row, column) {
+    element.style.position = 'absolute';
+    element.style.left = column * blockWidth + 'px';
+    element.style.top = row * blockHeight + 'px';
+    element.style.width = blockWidth + 'px';
+    element.style.height = blockHeight + 'px';
+    element.style.display = 'inline-block';
   };
 
   function getMaxColumns() {
@@ -92,6 +122,9 @@ module.exports = function(opts) {
   highlight(0, 0);
 
   return {
-    highlight: highlight
+    highlight: highlight,
+    add: add,
+    palette: palette,
+    domElement: container
   }
 };

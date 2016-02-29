@@ -6,6 +6,7 @@ var dragCameraComponent = require('../components/dragcamera');
 var editorConsole = require('./editorconsole');
 var editorTools = require('./editortools');
 var OffsetCommand = require('./commands/offsetcommand');
+var Blocks = require('../components/blocks');
 
 var Editor = function(object, app, input, camera, devConsole, config, palette, canvas) {
 
@@ -50,6 +51,8 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
   this.currentFrame = 0;
 
   this.cpr = null;
+
+  this.cprPrefabs = null;
 
   this.toolNames = ['pen', 'select'];
 
@@ -98,6 +101,27 @@ Editor.prototype.start = function() {
       self.selectedColor = color;
     }
   });
+
+  this.cprPrefabs = cpr({
+    palette: [
+      []
+    ],
+    onPick: function(obj) {},
+    blockWidth: 48,
+    blockHeight: 48
+  });
+
+  var saves = this.getSaves();
+  for (var id in saves) {
+    var save = saves[id];
+    var firstFrame = save.frames[0];
+    var imgData = this.screenshot(firstFrame.data);
+    this.cprPrefabs.add(0, this.cprPrefabs.palette[0].length, {
+      imgData: imgData
+    });
+  }
+
+  this.cprPrefabs.domElement.style.bottom = '120px';
 
   editorConsole(this, this.devConsole);
 
@@ -345,6 +369,7 @@ Editor.prototype.serialize = function() {
 Editor.prototype.deserialize = function(json) {
   this.frames = json.frames || [];
   this.updateCurrentFrame();
+  this.updateSize(this.blocks.dim);
 };
 
 Editor.prototype.updateTool = function() {
@@ -415,7 +440,7 @@ Editor.prototype.createNew = function() {
   this.updateSize(this.config['editor_default_size']);
 };
 
-Editor.prototype.screenshot = function() {
+Editor.prototype.screenshot = function(data) {
   var renderer = new THREE.WebGLRenderer({
     alpha: true
   });
@@ -425,9 +450,18 @@ Editor.prototype.screenshot = function() {
   var height = 100;
   renderer.setSize(width, height);
 
-  var clonedObj = this.blocks.obj.clone();
+  var object = new THREE.Object3D();
+  var blocks = new Blocks(object);
+  blocks.deserialize(data);
+  blocks.tick();
+
+  var dim = blocks.dim;
+
+  blocks.obj.position.set(-dim[0] / 2, -dim[1] / 2, -dim[2] / 2);
+
+  var objectClone = object.clone();
   var scene = new THREE.Scene();
-  scene.add(clonedObj);
+  scene.add(objectClone);
 
   var ambient = new THREE.AmbientLight(new THREE.Color("rgb(60%, 60%, 60%)"));
   var light = new THREE.DirectionalLight(0xffffff, 0.6);
@@ -435,33 +469,28 @@ Editor.prototype.screenshot = function() {
   scene.add(light);
   scene.add(ambient);
 
-  var dim = this.blocks.dim;
   var maxSize = Math.max(dim[0], dim[1], dim[2]) * 2;
 
   var camera = new THREE.OrthographicCamera(maxSize / -2, maxSize / 2, maxSize / 2, maxSize / -2, 0.1, 1000);
   camera.position.set(0, 0, 10);
 
   var cameraPosition = new THREE.Vector3(0, 0, maxSize)
-    .applyEuler(new THREE.Euler(-Math.PI / 4, Math.PI / 4, 0, 'YXZ'))
+    .applyEuler(new THREE.Euler(-Math.PI / 4, 0, 0, 'YXZ'))
   camera.position.copy(cameraPosition);
   camera.lookAt(new THREE.Vector3());
 
   renderer.render(scene, camera);
   imgData = renderer.domElement.toDataURL();
 
-  var img = document.createElement('img');
-  img.width = '100';
-  img.height = '100';
-  img.src = imgData;
-  img.style.position = 'absolute';
-  img.style.right = '0px';
-  img.style.top = '0px';
-
-  document.body.appendChild(img);
-
-  console.log(imgData);
-
   return imgData;
+};
+
+Editor.prototype.getSaves = function() {
+  try {
+    return JSON.parse(window.localStorage.getItem('b_saves') || {});
+  } catch (err) {
+    return {};
+  }
 };
 
 module.exports = Editor;

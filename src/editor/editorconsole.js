@@ -24,7 +24,6 @@ module.exports = function(editor, devConsole) {
     try {
       saves = JSON.parse(window.localStorage.getItem('b_saves') || {});
     } catch (err) {
-      window.localStorage.setItem('b_saves', {});
       throw err;
     }
 
@@ -44,7 +43,6 @@ module.exports = function(editor, devConsole) {
     try {
       saves = JSON.parse(window.localStorage.getItem('b_saves') || {});
     } catch (err) {
-      window.localStorage.setItem('b_saves', {});
       throw err;
     }
 
@@ -63,18 +61,20 @@ module.exports = function(editor, devConsole) {
     try {
       saves = JSON.parse(window.localStorage.getItem('b_saves') || {});
     } catch (err) {
-      window.localStorage.setItem('b_saves', {});
       throw err;
     }
 
     var name = args._[0];
 
+    if (saves[name] == null) {
+      throw new Error('cannot find save named: ' + name);
+    }
+
     editor.deserialize(saves[name]);
   };
 
   devConsole.commands['new'] = function(args) {
-    editor.blocks.clear();
-    editor.updateSize(editor.config['editor_default_size']);
+    editor.createNew();
   };
 
   devConsole.commands['frame'] = function(args) {
@@ -118,5 +118,59 @@ module.exports = function(editor, devConsole) {
     }
 
     editor[key] = value;
+  };
+
+  devConsole.commands['export'] = function(args) {
+    var name = args._[0];
+    var saves;
+    try {
+      saves = JSON.parse(window.localStorage.getItem('b_saves') || {});
+      if (saves[name] == null) {
+        throw new Error('save not found for name: ' + name);
+      }
+      window.prompt('copy and paste', JSON.stringify(saves[name]));
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  devConsole.commands['reset'] = function(args) {
+    if (args.f == null) {
+      throw new Error('please reset -f to confirm');
+    }
+
+    if (args.f) {
+      window.localStorage.setItem('b_saves', '{}');
+    }
+  };
+
+  devConsole.commands['mirror'] = function(args) {
+    if (args._.length === 0) {
+      throw new Error('please specify x y z or none');
+    }
+
+    if (args._.length === 1) {
+      if (args._[0] === 'none') {
+        editor.reflectX = editor.reflectY = editor.reflectZ = false;
+      }
+    }
+
+    editor.reflectX = editor.reflectY = editor.reflectZ = false;
+    for (var i = 0; i < args._.length; i++) {
+      var arg = args._[i];
+      if (arg === 'x') {
+        editor.reflectX = true;
+      } else if (arg === 'y') {
+        editor.reflectY = true;
+      } else if (arg === 'z') {
+        editor.reflectZ = true;
+      } else {
+        throw new Error('unknown option: ' + arg);
+      }
+    }
+  };
+
+  devConsole.commands['screen'] = function(args) {
+    editor.screenshot();
   };
 }

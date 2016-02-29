@@ -49,7 +49,7 @@ PenTool.prototype.tick = function() {
     var coord = this.getCoordToAdd(this.input.mouse);
     if (!!coord) {
       if (this.blocks.getAtCoord(coord) !== this.editor.paletteIndex) {
-        this.editor.runCommand(new SetCommand(this.blocks, [coord], this.editor.paletteIndex));
+        this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords([coord]), this.editor.paletteIndex));
         this.objShadowNeedsUpdate = true;
       }
     }
@@ -59,7 +59,7 @@ PenTool.prototype.tick = function() {
     var coord = this.getCoordToRemove(this.input.mouse);
     if (!!coord) {
       if (!!this.blocks.getAtCoord(coord)) {
-        this.editor.runCommand(new SetCommand(this.blocks, [coord], 0));
+        this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords([coord]), 0));
         this.objShadowNeedsUpdate = true;
       }
     }
@@ -79,7 +79,7 @@ PenTool.prototype.tick = function() {
 
     coords = uniqueCoords(coords);
     if (coords.length > 0) {
-      this.editor.runCommand(new SetCommand(this.blocks, coords, this.editor.paletteIndex));
+      this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords(coords), this.editor.paletteIndex));
     }
   }
 
@@ -97,7 +97,7 @@ PenTool.prototype.tick = function() {
 
     coords = uniqueCoords(coords);
     if (coords.length > 0) {
-      this.editor.runCommand(new SetCommand(this.blocks, coords, 0));
+      this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords(coords), 0));
     }
   }
 
@@ -148,6 +148,52 @@ PenTool.prototype.getCoord = function(objects, atPoint, delta) {
   );
 
   return coord;
+};
+
+// Reflect coords with editor settings
+PenTool.prototype.reflectCoords = function(coords) {
+  if (!this.editor.reflectX && !this.editor.reflectY && !this.editor.reflectZ) {
+    return coords;
+  }
+
+  var dim = this.blocks.dim;
+  var pivot = [
+    Math.round((dim[0] - 1) / 2),
+    Math.round((dim[1] - 1) / 2),
+    Math.round((dim[2] - 1) / 2)
+  ];
+
+  if (this.editor.reflectX) {
+    var reflected = [];
+    for (var i = 0; i < coords.length; i++) {
+      var r = coords[i].clone();
+      r.x = pivot[0] + pivot[0] - r.x;
+      reflected.push(r);
+    }
+    coords = coords.concat(reflected);
+  }
+
+  if (this.editor.reflectY) {
+    var reflected = [];
+    for (var i = 0; i < coords.length; i++) {
+      var r = coords[i].clone();
+      r.y = pivot[1] + pivot[1] - r.y;
+      reflected.push(r);
+    }
+    coords = coords.concat(reflected);
+  }
+
+  if (this.editor.reflectZ) {
+    var reflected = [];
+    for (var i = 0; i < coords.length; i++) {
+      var r = coords[i].clone();
+      r.z = pivot[2] + pivot[2] - r.z;
+      reflected.push(r);
+    }
+    coords = coords.concat(reflected);
+  }
+
+  return coords;
 };
 
 PenTool.prototype.getMousePoints = function(from, to, maxDis) {

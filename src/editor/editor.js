@@ -68,12 +68,22 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
   this.playTimeout = null;
 
   this.allFrames = false;
+
+  this.reflectX = false;
+
+  this.reflectY = false;
+
+  this.reflectZ = false;
 };
 
 Editor.$inject = ['app', 'input', 'camera', 'devConsole', 'config', 'palette', 'canvas'];
 
 Editor.prototype.start = function() {
   this.blocks = this.app.attach(this.object, blocksComponent);
+
+  this.frames.push({
+    data: this.blocks.serialize()
+  });
 
   for (var i = 0; i < this.palette.length; i++) {
     this.materials.push(new THREE.MeshLambertMaterial({
@@ -275,12 +285,6 @@ Editor.prototype.updateBoundingBox = function(size) {
 };
 
 Editor.prototype.addFrame = function() {
-  if (this.frames.length === 0) {
-    this.frames.push({
-      data: this.blocks.serialize()
-    });
-  }
-
   this.frames.push({
     data: this.blocks.serialize()
   })
@@ -414,6 +418,36 @@ Editor.prototype.stop = function() {
 
   clearTimeout(this.playTimeout);
   this.playing = false;
+};
+
+Editor.prototype.createNew = function() {
+  this.stop();
+  this.frames = [];
+  this.blocks.clear();
+  this.updateSize(this.config['editor_default_size']);
+};
+
+Editor.prototype.screenshot = function() {
+  var renderer = new THREE.WebGLRenderer();
+  renderer.setClearColor(0xf6f6f6);
+  var width = 100;
+  var height = 100;
+  renderer.setSize(width, height);
+
+  var clonedMesh = this.blocks.mesh.clone();
+  clonedMesh.position.set(0, 0, 0);
+  var scene = new THREE.Scene();
+  scene.add(clonedMesh);
+
+  var camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+  camera.position.set(0, 0, 50);
+
+  renderer.render(scene, camera);
+  imgData = renderer.domElement.toDataURL();
+
+  console.log(imgData);
+
+  return imgData;
 };
 
 module.exports = Editor;

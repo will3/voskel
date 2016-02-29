@@ -14,7 +14,7 @@ module.exports = function(editor, blocks, coords, offset) {
     command.set(coords[i], undefined);
 
     toAdd.push({
-      coord: blocks.normalizeCoord(new THREE.Vector3().addVectors(coord, offset)),
+      coord: normalizeCoord(new THREE.Vector3().addVectors(coord, offset), blocks.dim),
       value: value
     });
   }
@@ -26,6 +26,14 @@ module.exports = function(editor, blocks, coords, offset) {
     command.set(add.coord, add.value);
   }
 
+  function normalizeCoord(coord, dim) {
+    return new THREE.Vector3(
+      (coord.x + dim[0]) % dim[0],
+      (coord.y + dim[1]) % dim[1],
+      (coord.z + dim[2]) % dim[2]
+    );
+  };
+
   return {
     selectionCopy: null,
     run: function() {
@@ -35,7 +43,7 @@ module.exports = function(editor, blocks, coords, offset) {
       if (editor.selections.length > 0) {
         // Offset selection
         for (var i = 0; i < editor.selections.length; i++) {
-          var normalized = blocks.normalizeCoord(new THREE.Vector3().addVectors(editor.selections[i], offset));
+          var normalized = normalizeCoord(new THREE.Vector3().addVectors(editor.selections[i], offset), blocks.dim);
           editor.selections[i] = normalized;
         }
       }
@@ -46,7 +54,7 @@ module.exports = function(editor, blocks, coords, offset) {
       if (editor.selections.length > 0) {
         // Offset selection
         for (var i = 0; i < editor.selections.length; i++) {
-          var normalized = blocks.normalizeCoord(new THREE.Vector3().subVectors(editor.selections[i], offset));
+          var normalized = normalizeCoord(new THREE.Vector3().subVectors(editor.selections[i], offset), blocks.dim);
           editor.selections[i] = normalized;
         }
       }

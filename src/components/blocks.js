@@ -5,8 +5,10 @@ var arrayUtils = require('../utils/arrayutils');
 var Blocks = function(object) {
   this.object = object;
   this.type = 'blocks';
+
   this.dim = [32, 32, 32];
   this.chunk = ndarray([], this.dim);
+
   this.mesh = null;
   this.obj = new THREE.Object3D();
   this.material = new THREE.MultiMaterial();
@@ -40,14 +42,6 @@ Blocks.prototype.pointToCoord = function(point) {
 
 Blocks.prototype.coordToPoint = function(coord) {
   return new THREE.Vector3(coord.x, coord.y, coord.z);
-};
-
-Blocks.prototype.normalizeCoord = function(coord) {
-  return new THREE.Vector3(
-    (coord.x + this.dim[0]) % this.dim[0],
-    (coord.y + this.dim[1]) % this.dim[1],
-    (coord.z + this.dim[2]) % this.dim[2]
-  );
 };
 
 Blocks.prototype.tick = function() {

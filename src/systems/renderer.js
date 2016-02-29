@@ -12,6 +12,7 @@ module.exports = function(scene, camera, container) {
   var ssaoPass, effectComposer;
 
   var system = {};
+  system.renderer = renderer;
 
   var stats = new Stats();
   stats.domElement.style.position = 'absolute';

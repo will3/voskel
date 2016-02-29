@@ -73,7 +73,7 @@ Engine.prototype.use = function(type, system) {
 };
 
 Engine.prototype.tick = function() {
-  app.emit('beforeTick');
+  this.emit('beforeTick');
 
   for (var i = 0; i < this.systems.length; i++) {
     var system = this.systems[i];
@@ -93,7 +93,7 @@ Engine.prototype.tick = function() {
     if (system.lateTick != null) system.lateTick();
   }
 
-  app.emit('afterTick');
+  this.emit('afterTick');
 };
 
 Engine.prototype.start = function() {
@@ -102,7 +102,7 @@ Engine.prototype.start = function() {
     self.tick();
     setTimeout(interval, 1000 / this.frameRate);
   }
-  interval;
+  interval();
 };
 
 Engine.prototype.value = function(type, object) {
@@ -147,6 +147,6 @@ Engine.prototype.loadAssembly = function(assembly) {
 
 events.prototype.apply(Engine.prototype);
 
-modules.exports = function() {
+module.exports = function() {
   return new Engine();
 };

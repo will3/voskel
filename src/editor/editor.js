@@ -5,8 +5,9 @@ var blocksComponent = require('../components/blocks');
 var dragCameraComponent = require('../components/dragcamera');
 var editorConsole = require('./editorconsole');
 var editorTools = require('./editortools');
+var OffsetCommand = require('./commands/offsetcommand');
 
-var Editor = function(object, app, input, camera, devConsole, config, palette) {
+var Editor = function(object, app, input, camera, devConsole, config, palette, canvas) {
 
   this.object = object;
 
@@ -21,6 +22,10 @@ var Editor = function(object, app, input, camera, devConsole, config, palette) {
   this.config = config;
 
   this.palette = palette;
+
+  this.canvas = canvas;
+
+  this.context = this.canvas.getContext('2d');
 
   this.blocks = null;
 
@@ -56,9 +61,16 @@ var Editor = function(object, app, input, camera, devConsole, config, palette) {
 
   this.selections = [];
 
+  this.frameRate = 4;
+
+  this.playing = false;
+
+  this.playTimeout = null;
+
+  this.allFrames = false;
 };
 
-Editor.$inject = ['app', 'input', 'camera', 'devConsole', 'config', 'palette'];
+Editor.$inject = ['app', 'input', 'camera', 'devConsole', 'config', 'palette', 'canvas'];
 
 Editor.prototype.start = function() {
   this.blocks = this.app.attach(this.object, blocksComponent);
@@ -98,56 +110,38 @@ Editor.prototype.tick = function() {
 
   this.tool.tick();
 
-  if (this.selections.length > 0) {
-    if (this.input.keyDown('f')) {
-      this.blocks.addToOffset(new THREE.Vector3(0, 1, 0));
-    }
+  this.drawSelection();
 
-    if (this.input.keyDown('r')) {
-      this.blocks.addToOffset(new THREE.Vector3(0, -1, 0));
-    }
-
-    if (this.input.keyDown('a')) {
-      this.blocks.addToOffset(new THREE.Vector3(1, 0, 0));
-    }
-
-    if (this.input.keyDown('d')) {
-      this.blocks.addToOffset(new THREE.Vector3(-1, 0, 0));
-    }
-
-    if (this.input.keyDown('w')) {
-      this.blocks.addToOffset(new THREE.Vector3(0, 0, 1));
-    }
-
-    if (this.input.keyDown('s')) {
-      this.blocks.addToOffset(new THREE.Vector3(0, 0, -1));
-    }
-  } else {
-    if (this.input.keyDown('f')) {
-      this.offsetSelection(new THREE.Vector3(0, 1, 0));
-    }
-
-    if (this.input.keyDown('r')) {
-      this.offsetSelection(new THREE.Vector3(0, -1, 0));
-    }
-
-    if (this.input.keyDown('a')) {
-      this.offsetSelection(new THREE.Vector3(1, 0, 0));
-    }
-
-    if (this.input.keyDown('d')) {
-      this.offsetSelection(new THREE.Vector3(-1, 0, 0));
-    }
-
-    if (this.input.keyDown('w')) {
-      this.offsetSelection(new THREE.Vector3(0, 0, 1));
-    }
-
-    if (this.input.keyDown('s')) {
-      this.offsetSelection(new THREE.Vector3(0, 0, -1));
-    }
+  var offsetCoord = null;
+  if (this.input.keyDown('f')) {
+    offsetCoord = new THREE.Vector3(0, -1, 0);
+  }
+  if (this.input.keyDown('r')) {
+    offsetCoord = new THREE.Vector3(0, 1, 0);
+  }
+  if (this.input.keyDown('a')) {
+    offsetCoord = new THREE.Vector3(-1, 0, 0);
+  }
+  if (this.input.keyDown('d')) {
+    offsetCoord = new THREE.Vector3(1, 0, 0);
+  }
+  if (this.input.keyDown('w')) {
+    offsetCoord = new THREE.Vector3(0, 0, -1);
+  }
+  if (this.input.keyDown('s')) {
+    offsetCoord = new THREE.Vector3(0, 0, 1);
   }
 
+  if (offsetCoord != null) {
+    var selectedCoords;
+    if (this.selections.length > 0) {
+      selectedCoords = this.selections;
+    } else {
+      selectedCoords = this.blocks.getAllCoords();
+    }
+
+    this.runCommand(new OffsetCommand(this, this.blocks, selectedCoords, offsetCoord));
+  }
 
   if (this.input.keyHold('command') && this.input.keyHold('shift')) {
     if (this.input.keyDown('z')) {
@@ -312,10 +306,12 @@ Editor.prototype.nextFrame = function() {
 
   this.saveCurrentFrame();
 
-  if (this.currentFrame < this.frames.length - 1) {
-    this.currentFrame++;
-    this.updateCurrentFrame();
+  this.currentFrame++;
+  if (this.currentFrame === this.frames.length) {
+    this.currentFrame = 0;
   }
+
+  this.updateCurrentFrame();
 };
 
 Editor.prototype.lastFrame = function() {
@@ -338,20 +334,17 @@ Editor.prototype.saveCurrentFrame = function() {
 };
 
 Editor.prototype.serialize = function() {
+  this.saveCurrentFrame();
+
   var json = {};
-  json.blocks = this.blocks.serialize();
   json.frames = this.frames;
-  json.currentFrame = this.currentFrame;
   json.paletteIndex = this.paletteIndex;
 
   return json;
 };
 
 Editor.prototype.deserialize = function(json) {
-  this.blocks.deserialize(json.blocks);
-
   this.frames = json.frames || [];
-  this.currentFrame = json.currentFrame;
   this.updateCurrentFrame();
 
   this.paletteIndex = json.paletteIndex || 1;
@@ -376,6 +369,51 @@ Editor.prototype.updateTool = function() {
 Editor.prototype.setLockCamera = function(value) {
   this.lockCamera = value;
   this.dragCamera.lockRotation = value;
+};
+
+Editor.prototype.drawSelection = function() {
+  var blocks = this.blocks;
+  for (var i = 0; i < this.selections.length; i++) {
+    var coord = this.selections[i];
+    coord = coord.clone().add(new THREE.Vector3(0.5, 0.5, 0.5));
+    var localPoint = blocks.coordToPoint(coord);
+    var worldPoint = blocks.obj.localToWorld(localPoint);
+    var vector = worldPoint.project(this.camera);
+    vector.x = Math.round((vector.x + 1) * canvas.width / 2);
+    vector.y = Math.round((-vector.y + 1) * canvas.height / 2);
+
+    this.context.fillStyle = '#ffffff';
+    this.context.fillRect(vector.x, vector.y, 1, 1);
+  }
+};
+
+Editor.prototype.play = function() {
+  if (this.frames <= 1) {
+    return;
+  }
+
+  if (this.playing) {
+    return;
+  }
+
+  this.playing = true;
+
+  var self = this;
+  var interval = function() {
+    self.nextFrame(true);
+    self.playTimeout = setTimeout(interval, 1000 / self.frameRate);
+  };
+
+  interval();
+};
+
+Editor.prototype.stop = function() {
+  if (!this.playing) {
+    return;
+  }
+
+  clearTimeout(this.playTimeout);
+  this.playing = false;
 };
 
 module.exports = Editor;

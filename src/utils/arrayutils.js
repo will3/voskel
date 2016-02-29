@@ -17,6 +17,14 @@ var array = {
     if (index !== -1) {
       array.splice(index, 1);
     }
+  },
+
+  clone: function(array) {
+    var copy = [];
+    for (var i = 0; i < array.length; i++) {
+      copy[i] = array[i];
+    }
+    return copy;
   }
 };
 

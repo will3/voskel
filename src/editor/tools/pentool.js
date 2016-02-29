@@ -48,7 +48,6 @@ PenTool.prototype.tick = function() {
   if (this.input.mouseClick(0)) {
     var coord = this.getCoordToAdd(this.input.mouse);
     if (!!coord) {
-      coord = this.blocks.getCoordAddOffset(coord);
       if (this.blocks.getAtCoord(coord) !== this.editor.paletteIndex) {
         this.editor.runCommand(new SetCommand(this.blocks, [coord], this.editor.paletteIndex));
         this.objShadowNeedsUpdate = true;
@@ -59,7 +58,6 @@ PenTool.prototype.tick = function() {
   if (this.input.mouseClick(2)) {
     var coord = this.getCoordToRemove(this.input.mouse);
     if (!!coord) {
-      coord = this.blocks.getCoordAddOffset(coord);
       if (!!this.blocks.getAtCoord(coord)) {
         this.editor.runCommand(new SetCommand(this.blocks, [coord], 0));
         this.objShadowNeedsUpdate = true;
@@ -73,7 +71,6 @@ PenTool.prototype.tick = function() {
     for (var i = 0; i < points.length; i++) {
       var coord = this.getCoordToAdd(points[i]);
       if (!!coord) {
-        coord = this.blocks.getCoordAddOffset(coord);
         if (this.blocks.getAtCoord(coord) !== this.editor.paletteIndex) {
           coords.push(coord);
         }
@@ -92,7 +89,6 @@ PenTool.prototype.tick = function() {
     for (var i = 0; i < points.length; i++) {
       var coord = this.getCoordToRemove(points[i], this.sn);
       if (!!coord) {
-        coord = this.blocks.getCoordAddOffset(coord);
         if (!!this.blocks.getAtCoord(coord)) {
           coords.push(coord);
         }

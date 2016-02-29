@@ -14,6 +14,7 @@ app.value('camera', camera);
 app.value('config', require('./data/config.json'));
 app.value('palette', require('./data/palette.json'));
 app.value('materials', require('./services/materials'));
+app.value('canvas',  document.getElementById('canvas'));
 
 var container = document.getElementById('container');
 app.use(require('./systems/renderer')(scene, camera, container));

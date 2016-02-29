@@ -1,5 +1,6 @@
 var ndarray = require('ndarray');
 var mesher = require('../voxel/mesher');
+var arrayUtils = require('../utils/arrayutils');
 
 var Blocks = function(object) {
   this.object = object;
@@ -9,7 +10,6 @@ var Blocks = function(object) {
   this.mesh = null;
   this.obj = new THREE.Object3D();
   this.material = new THREE.MultiMaterial();
-  this.offset = new THREE.Vector3();
 
   this.dirty = false;
   this.dimNeedsUpdate = false;
@@ -26,22 +26,6 @@ Blocks.prototype.setAtCoord = function(coord, b) {
   this.set(coord.x, coord.y, coord.z, b);
 };
 
-Blocks.prototype.getCoordAddOffset = function(coord) {
-  var coordWithOffset = coord.clone().add(this.offset).add(new THREE.Vector3().fromArray(this.dim));
-  coordWithOffset.x %= this.dim[0];
-  coordWithOffset.y %= this.dim[1];
-  coordWithOffset.z %= this.dim[2];
-  return coordWithOffset;
-};
-
-Blocks.prototype.getCoordSubOffset = function(coord) {
-  var coordWithOffset = coord.clone().sub(this.offset).add(new THREE.Vector3().fromArray(this.dim));
-  coordWithOffset.x %= this.dim[0];
-  coordWithOffset.y %= this.dim[1];
-  coordWithOffset.z %= this.dim[2];
-  return coordWithOffset;
-};
-
 Blocks.prototype.get = function(x, y, z) {
   return this.chunk.get(x, y, z);
 };
@@ -56,6 +40,14 @@ Blocks.prototype.pointToCoord = function(point) {
 
 Blocks.prototype.coordToPoint = function(coord) {
   return new THREE.Vector3(coord.x, coord.y, coord.z);
+};
+
+Blocks.prototype.normalizeCoord = function(coord) {
+  return new THREE.Vector3(
+    (coord.x + this.dim[0]) % this.dim[0],
+    (coord.y + this.dim[1]) % this.dim[1],
+    (coord.z + this.dim[2]) % this.dim[2]
+  );
 };
 
 Blocks.prototype.tick = function() {
@@ -81,19 +73,6 @@ Blocks.prototype.setDim = function(value) {
   this.dirty = true;
 };
 
-Blocks.prototype.addToOffset = function(value) {
-  this.offset.add(value);
-  this.offset.x = (this.offset.x + this.dim[0]) % this.dim[0];
-  this.offset.y = (this.offset.y + this.dim[1]) % this.dim[1];
-  this.offset.z = (this.offset.z + this.dim[2]) % this.dim[2];
-  this.dirty = true;
-};
-
-Blocks.prototype.setOffset = function(value) {
-  this.offset.copy(value);
-  this.dirty = true;
-}
-
 Blocks.prototype.visit = function(callback) {
   var shape = this.chunk.shape;
   var data = this.chunk.data;
@@ -109,6 +88,14 @@ Blocks.prototype.visit = function(callback) {
   }
 };
 
+Blocks.prototype.getAllCoords = function() {
+  var coords = [];
+  this.visit(function(i, j, k) {
+    coords.push(new THREE.Vector3(i, j, k));
+  });
+  return coords;
+};
+
 Blocks.prototype.print = function() {
   this.visit(function(i, j, k, b) {
     console.log([i, j, k].join(','), b);
@@ -118,8 +105,7 @@ Blocks.prototype.print = function() {
 Blocks.prototype.serialize = function() {
   return {
     dim: this.dim,
-    chunkData: this.chunk.data,
-    offset: this.offset.toArray()
+    chunkData: arrayUtils.clone(this.chunk.data)
   };
 };
 
@@ -129,7 +115,6 @@ Blocks.prototype.deserialize = function(json) {
   for (var i = 0; i < json.chunkData.length; i++) {
     this.chunk.data[i] = json.chunkData[i];
   }
-  this.offset.fromArray(json.offset);
 
   this.dimNeedsUpdate = true;
   this.dirty = true;
@@ -139,16 +124,12 @@ Blocks.prototype._updateMesh = function(result) {
   if (this.mesh != null) {
     this.obj.remove(this.mesh);
   }
-  // this.chunk.data
+
   var self = this;
-  var offset = this.offset;
   var dim = this.dim;
 
   var result = mesher(function(i, j, k) {
-    return self.get(
-      (i + offset.x) % dim[0],
-      (j + offset.y) % dim[1],
-      (k + offset.z) % dim[2]);
+    return self.get(i, j, k);
   }, dim);
 
   var geometry = new THREE.Geometry();

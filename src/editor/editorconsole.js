@@ -98,4 +98,25 @@ module.exports = function(editor, devConsole) {
     }
   };
 
+  devConsole.commands['play'] = function(args) {
+    var frameRate = args._[0] || 4;
+
+    editor.frameRate = frameRate;
+    editor.play();
+  };
+
+  devConsole.commands['stop'] = function(args) {
+    editor.stop();
+  };
+
+  devConsole.commands['set'] = function(args) {
+    var key = args._[0];
+    var value = args._[1];
+
+    if (editor[key] === undefined) {
+      throw new Error('key not found: ' + key);
+    }
+
+    editor[key] = value;
+  };
 }

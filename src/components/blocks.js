@@ -17,6 +17,8 @@ var Blocks = function(object) {
   this.dimNeedsUpdate = false;
 
   this.object.add(this.obj);
+
+  this.palette = [null];
 };
 
 Blocks.prototype.set = function(x, y, z, b) {
@@ -99,7 +101,8 @@ Blocks.prototype.print = function() {
 Blocks.prototype.serialize = function() {
   return {
     dim: this.dim,
-    chunkData: arrayUtils.clone(this.chunk.data)
+    chunkData: arrayUtils.clone(this.chunk.data),
+    palette: this.palette
   };
 };
 
@@ -109,6 +112,10 @@ Blocks.prototype.deserialize = function(json) {
   for (var i = 0; i < json.chunkData.length; i++) {
     this.chunk.data[i] = json.chunkData[i];
   }
+
+  this.palette = json.palette;
+
+  this.updateMaterial();
 
   this.dimNeedsUpdate = true;
   this.dirty = true;
@@ -173,6 +180,37 @@ Blocks.prototype._updateDim = function() {
   }
 
   this.chunk = newChunk;
+};
+
+Blocks.prototype.getOrAddColorIndex = function(color) {
+  // null, 0, false, undefined
+  if (!color) {
+    return 0;
+  }
+
+  var index = arrayUtils.indexOf(this.palette, color);
+  if (index == -1) {
+    this.palette.push(color);
+    index = this.palette.length - 1;
+    var material = new THREE.MeshLambertMaterial({
+      color: new THREE.Color(this.palette[index])
+    });
+    console.log(material.color);
+    this.material.materials.push(material);
+    return this.palette.length - 1;
+  } else {
+    return index;
+  }
+};
+
+Blocks.prototype.updateMaterial = function() {
+  this.material = new THREE.MultiMaterial();
+  for (var i = 1; i < this.palette.length; i++) {
+    var material = new THREE.MeshLambertMaterial({
+      color: new THREE.Color(this.palette[i])
+    });
+    this.material.materials.push(material);
+  }
 };
 
 module.exports = Blocks;

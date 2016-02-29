@@ -39,7 +39,7 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
 
   this.materials = [];
 
-  this.paletteIndex = 1;
+  this.selectedColor = null;
 
   this.undos = CBuffer(200);
 
@@ -85,21 +85,17 @@ Editor.prototype.start = function() {
     data: this.blocks.serialize()
   });
 
-  for (var i = 0; i < this.palette.length; i++) {
-    this.materials.push(new THREE.MeshLambertMaterial({
-      color: new THREE.Color(this.palette[i]).getHex()
-    }));
-  }
-
   this.updateMaterial(this.blocks);
+
+  this.selectedColor = this.palette[0][0];
 
   // Create color picker
   var self = this;
   this.cpr = cpr({
-    columns: 16,
     palette: this.palette,
-    onPick: function(color, index) {
-      self.paletteIndex = index + 1;
+    onPick: function(color) {
+      console.log(color);
+      self.selectedColor = color;
     }
   });
 
@@ -342,7 +338,6 @@ Editor.prototype.serialize = function() {
 
   var json = {};
   json.frames = this.frames;
-  json.paletteIndex = this.paletteIndex;
 
   return json;
 };
@@ -350,13 +345,6 @@ Editor.prototype.serialize = function() {
 Editor.prototype.deserialize = function(json) {
   this.frames = json.frames || [];
   this.updateCurrentFrame();
-
-  this.paletteIndex = json.paletteIndex || 1;
-  this.updatePaletteIndex();
-};
-
-Editor.prototype.updatePaletteIndex = function() {
-  this.cpr.highlight(this.paletteIndex - 1);
 };
 
 Editor.prototype.updateTool = function() {
@@ -428,22 +416,48 @@ Editor.prototype.createNew = function() {
 };
 
 Editor.prototype.screenshot = function() {
-  var renderer = new THREE.WebGLRenderer();
-  renderer.setClearColor(0xf6f6f6);
+  var renderer = new THREE.WebGLRenderer({
+    alpha: true
+  });
+  renderer.setClearColor(0xffffff, 0.0);
+
   var width = 100;
   var height = 100;
   renderer.setSize(width, height);
 
-  var clonedMesh = this.blocks.mesh.clone();
-  clonedMesh.position.set(0, 0, 0);
+  var clonedObj = this.blocks.obj.clone();
   var scene = new THREE.Scene();
-  scene.add(clonedMesh);
+  scene.add(clonedObj);
 
-  var camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-  camera.position.set(0, 0, 50);
+  var ambient = new THREE.AmbientLight(new THREE.Color("rgb(60%, 60%, 60%)"));
+  var light = new THREE.DirectionalLight(0xffffff, 0.6);
+  light.position.set(0.8, 1, 0.5);
+  scene.add(light);
+  scene.add(ambient);
+
+  var dim = this.blocks.dim;
+  var maxSize = Math.max(dim[0], dim[1], dim[2]) * 2;
+
+  var camera = new THREE.OrthographicCamera(maxSize / -2, maxSize / 2, maxSize / 2, maxSize / -2, 0.1, 1000);
+  camera.position.set(0, 0, 10);
+
+  var cameraPosition = new THREE.Vector3(0, 0, maxSize)
+    .applyEuler(new THREE.Euler(-Math.PI / 4, Math.PI / 4, 0, 'YXZ'))
+  camera.position.copy(cameraPosition);
+  camera.lookAt(new THREE.Vector3());
 
   renderer.render(scene, camera);
   imgData = renderer.domElement.toDataURL();
+
+  var img = document.createElement('img');
+  img.width = '100';
+  img.height = '100';
+  img.src = imgData;
+  img.style.position = 'absolute';
+  img.style.right = '0px';
+  img.style.top = '0px';
+
+  document.body.appendChild(img);
 
   console.log(imgData);
 

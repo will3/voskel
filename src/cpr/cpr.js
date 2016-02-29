@@ -1,6 +1,5 @@
 module.exports = function(opts) {
   opts = opts || {};
-  var columns = opts.columns || 4;
   var palette = opts.palette || [];
   var onPick = opts.onPick || function() {};
   var blockWidth = 20;
@@ -19,43 +18,48 @@ module.exports = function(opts) {
   var blocks = [];
 
   for (var i = 0; i < palette.length; i++) {
-    addColorBlock(i, palette[i]);
+    var row = palette[i];
+    for (var j = 0; j < row.length; j++) {
+      addColorBlock(i, j, row[j]);
+    }
   }
+
   updateContainer();
 
-  function addColorBlock(index, color) {
+  function addColorBlock(row, column, color) {
     var div = document.createElement('div');
     div.style.position = 'absolute';
-    div.style.left = getColumn(index) * blockWidth + 'px';
-    div.style.top = getRow(index) * blockHeight + 'px';
+    div.style.left = column * blockWidth + 'px';
+    div.style.top = row * blockHeight + 'px';
     div.style.width = blockWidth + 'px';
     div.style.height = blockHeight + 'px';
     div.style.backgroundColor = color;
     div.style.display = 'inline-block';
     container.appendChild(div);
-    blocks[index] = div;
+
+    var columns = blocks[row] || (blocks[row] = []);
+    columns[column] = div;
+  };
+
+  function getMaxColumns() {
+    var max = 0;
+    for (var i = 0; i < palette.length; i++) {
+      if (palette[i].length > max) {
+        max = palette[i].length;
+      }
+    }
+
+    return max;
   };
 
   function updateContainer() {
-    container.style.width = columns * blockWidth + 'px';
-    container.style.height = Math.ceil(palette.length / columns) * blockHeight + 'px';
-  };
-
-  function getRow(index) {
-    return Math.floor(index / columns);
-  };
-
-  function getColumn(index) {
-    return index % columns;
-  };
-
-  function getIndex(row, column) {
-    return row * columns + column;
+    container.style.width = getMaxColumns() * blockWidth + 'px';
+    container.style.height = palette.length * blockHeight + 'px';
   };
 
   var highlightDiv = null;
 
-  function highlight(index) {
+  function highlight(row, column) {
     if (highlightDiv == null) {
       highlightDiv = document.createElement('div');
       highlightDiv.style.position = 'absolute';
@@ -66,8 +70,8 @@ module.exports = function(opts) {
       container.appendChild(highlightDiv);
     }
 
-    highlightDiv.style.left = getColumn(index) * blockWidth - 1 + 'px';
-    highlightDiv.style.top = getRow(index) * blockHeight - 1 + 'px';
+    highlightDiv.style.left = column * blockWidth - 1 + 'px';
+    highlightDiv.style.top = row * blockHeight - 1 + 'px';
   };
 
   container.addEventListener('mousedown', function(e) {
@@ -75,19 +79,17 @@ module.exports = function(opts) {
     var mouseY = e.pageY - container.offsetTop;
     var row = Math.floor(mouseY / blockHeight);
     var column = Math.floor(mouseX / blockWidth);
-    var index = getIndex(row, column);
 
-    if (index >= palette.length) {
+    if (palette[row] == null) {
       return;
     }
 
-    var color = palette[index];
-    highlight(index);
-
-    onPick(color, index);
+    var color = palette[row][column];
+    highlight(row, column);
+    onPick(color);
   });
 
-  highlight(0);
+  highlight(0, 0);
 
   return {
     highlight: highlight

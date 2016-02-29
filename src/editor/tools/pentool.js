@@ -46,16 +46,20 @@ PenTool.prototype.tick = function() {
   }
 
   if (this.input.mouseClick(0)) {
+    var selectedIndex = this.blocks.getOrAddColorIndex(this.editor.selectedColor);
+
     var coord = this.getCoordToAdd(this.input.mouse);
     if (!!coord) {
-      if (this.blocks.getAtCoord(coord) !== this.editor.paletteIndex) {
-        this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords([coord]), this.editor.paletteIndex));
+      if (this.blocks.getAtCoord(coord) !== selectedIndex) {
+        this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords([coord]), selectedIndex));
         this.objShadowNeedsUpdate = true;
       }
     }
   }
 
   if (this.input.mouseClick(2)) {
+    var selectedIndex = this.blocks.getOrAddColorIndex(this.editor.selectedColor);
+
     var coord = this.getCoordToRemove(this.input.mouse);
     if (!!coord) {
       if (!!this.blocks.getAtCoord(coord)) {
@@ -66,12 +70,14 @@ PenTool.prototype.tick = function() {
   }
 
   if (this.input.mouseHold(0) && this.editor.lockCamera && this.input.mouseMove()) {
+    var selectedIndex = this.blocks.getOrAddColorIndex(this.editor.selectedColor);
+
     var points = this.getMousePoints(this.lastMouse, this.input.mouse, this.mouseSampleInterval);
     var coords = [];
     for (var i = 0; i < points.length; i++) {
       var coord = this.getCoordToAdd(points[i]);
       if (!!coord) {
-        if (this.blocks.getAtCoord(coord) !== this.editor.paletteIndex) {
+        if (this.blocks.getAtCoord(coord) !== selectedIndex) {
           coords.push(coord);
         }
       }
@@ -79,11 +85,13 @@ PenTool.prototype.tick = function() {
 
     coords = uniqueCoords(coords);
     if (coords.length > 0) {
-      this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords(coords), this.editor.paletteIndex));
+      this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords(coords), selectedIndex));
     }
   }
 
   if (this.input.mouseHold(2) && this.editor.lockCamera && this.input.mouseMove()) {
+    var selectedIndex = this.blocks.getOrAddColorIndex(this.editor.selectedColor);
+
     var points = this.getMousePoints(this.lastMouse, this.input.mouse, this.mouseSampleInterval);
     var coords = [];
     for (var i = 0; i < points.length; i++) {

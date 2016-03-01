@@ -8,7 +8,7 @@ var editorTools = require('./editortools');
 var OffsetCommand = require('./commands/offsetcommand');
 var Blocks = require('../components/blocks');
 
-var Editor = function(object, app, input, camera, devConsole, config, palette, canvas) {
+var Editor = function(object, app, input, camera, devConsole, config, palette, canvas, saveService) {
 
   this.object = object;
 
@@ -25,6 +25,8 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
   this.palette = palette;
 
   this.canvas = canvas;
+
+  this.saveService = saveService;
 
   this.context = this.canvas.getContext('2d');
 
@@ -46,13 +48,11 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
 
   this.redos = CBuffer(200);
 
-  this.frames = [];
+  this.colorBar = null;
 
-  this.currentFrame = 0;
+  this.prefabsBar = null;
 
-  this.cpr = null;
-
-  this.cprPrefabs = null;
+  this.prefabToolbar = null;
 
   this.toolNames = ['pen', 'select'];
 
@@ -64,72 +64,91 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
 
   this.selections = [];
 
-  this.frameRate = 4;
-
-  this.playing = false;
-
-  this.playTimeout = null;
-
-  this.allFrames = false;
-
   this.reflectX = false;
 
   this.reflectY = false;
 
   this.reflectZ = false;
+
+  // loaded saves
+  this.saves = [];
+
+  this.screenshotRenderer = null;
 };
 
-Editor.$inject = ['app', 'input', 'camera', 'devConsole', 'config', 'palette', 'canvas'];
+Editor.$inject = ['app', 'input', 'camera', 'devConsole', 'config', 'palette', 'canvas', 'saveService'];
 
 Editor.prototype.start = function() {
-  this.blocks = this.app.attach(this.object, blocksComponent);
+  editorConsole(this, this.devConsole);
 
-  this.frames.push({
-    data: this.blocks.serialize()
-  });
+  this.saves = this.saveService.load();
+
+  this.blocks = this.app.attach(this.object, blocksComponent);
+  this.dragCamera = this.app.attach(this.camera, dragCameraComponent);
+
+  this.updateTool();
 
   this.updateMaterial(this.blocks);
 
-  this.selectedColor = this.palette[0][0];
+  this.selectedColor = this.palette[0];
 
   // Create color picker
   var self = this;
-  this.cpr = cpr({
-    palette: this.palette,
+  this.colorBar = cpr({
+    data: this.palette,
     onPick: function(color) {
       console.log(color);
       self.selectedColor = color;
     }
   });
 
-  this.cprPrefabs = cpr({
-    palette: [
-      []
-    ],
-    onPick: function(obj) {},
+  this.prefabsBar = cpr({
+    onPick: function(obj, index) {
+      self.load(self.saves[index]);
+    },
     blockWidth: 48,
     blockHeight: 48
   });
 
-  var saves = this.getSaves();
-  for (var id in saves) {
-    var save = saves[id];
-    var firstFrame = save.frames[0];
-    var imgData = this.screenshot(firstFrame.data);
-    this.cprPrefabs.add(0, this.cprPrefabs.palette[0].length, {
-      imgData: imgData
-    });
+  this.prefabsBar.domElement.style.bottom = '120px';
+
+  var prefabToolbarData = [{
+    button: 'plus',
+    src: '/images/plus.png'
+  }, {
+    button: 'minus',
+    src: '/images/minus.png'
+  }, {
+    button: 'clone',
+    src: '/images/clone.png'
+  }];
+
+  this.prefabToolbar = cpr({
+    data: prefabToolbarData,
+    blockWidth: 32,
+    blockHeight: 32,
+    disableHighlight: true,
+    onPick: function(obj) {
+      var button = obj.button;
+
+      if (button === 'plus') {
+        self.createNew();
+      } else if (button === 'minus') {
+        self.removeSelected();
+      } else if (button === 'clone') {
+        self.createClone();
+      }
+    }
+  });
+
+  this.prefabToolbar.domElement.style.bottom = '180px';
+
+  if (this.saves.length === 0) {
+    this.saves.push(this.blocks.serialize());
   }
 
-  this.cprPrefabs.domElement.style.bottom = '120px';
-
-  editorConsole(this, this.devConsole);
-
-  this.dragCamera = this.app.attach(this.camera, dragCameraComponent);
-
-  this.updateSize(this.config['editor_default_size']);
-
-  this.updateTool();
+  this.load(this.saves[0]);
+  this.updateScreenshots();
 };
 
 Editor.prototype.tick = function() {
@@ -183,14 +202,6 @@ Editor.prototype.tick = function() {
     }
   }
 
-  if (this.input.keyDown(';')) {
-    this.lastFrame();
-  }
-
-  if (this.input.keyDown('\'')) {
-    this.nextFrame();
-  }
-
   if (this.input.keyDown('1')) {
     this.toolName = this.toolNames[0];
     this.updateTool();
@@ -208,6 +219,7 @@ Editor.prototype.undo = function() {
   command.undo();
   this.undos.pop();
   this.redos.push(command);
+  this.updateCurrentScreenshot();
 };
 
 Editor.prototype.redo = function() {
@@ -218,12 +230,38 @@ Editor.prototype.redo = function() {
   command.run();
   this.redos.pop();
   this.undos.push(command);
+  this.updateCurrentScreenshot();
 };
 
 Editor.prototype.runCommand = function(command) {
   command.run();
   this.undos.push(command);
   this.redos = CBuffer(200);
+  this.updateCurrentScreenshot();
+};
+
+Editor.prototype.updateCurrentScreenshot = function() {
+  var index = this.prefabsBar.selectedIndex;
+  this.saves[index] = this.blocks.serialize();
+  this.updateScreenshotAtIndex(index);
+};
+
+Editor.prototype.updateScreenshots = function() {
+  this.prefabsBar.clear();
+
+  for (var i = 0; i < this.saves.length; i++) {
+    this.updateScreenshotAtIndex(i);
+  }
+};
+
+Editor.prototype.updateScreenshotAtIndex = function(index) {
+  var save = this.saves[index];
+  var imgData = this.screenshot(save);
+
+  this.prefabsBar.set(index, {
+    imgData: imgData,
+    index: index
+  });
 };
 
 Editor.prototype.updateMaterial = function(blocks) {
@@ -304,74 +342,6 @@ Editor.prototype.updateBoundingBox = function(size) {
   this.object.add(this.objBoundingBox);
 };
 
-Editor.prototype.addFrame = function() {
-  this.frames.push({
-    data: this.blocks.serialize()
-  })
-
-  this.currentFrame = this.frames.length - 1;
-  this.updateCurrentFrame();
-};
-
-Editor.prototype.updateCurrentFrame = function() {
-  if (this.frames.length === 0) {
-    return;
-  }
-
-  var frame = this.frames[this.currentFrame];
-  var data = frame.data;
-  this.blocks.deserialize(data);
-};
-
-Editor.prototype.nextFrame = function() {
-  if (this.frames.length === 0) {
-    return;
-  }
-
-  this.saveCurrentFrame();
-
-  this.currentFrame++;
-  if (this.currentFrame === this.frames.length) {
-    this.currentFrame = 0;
-  }
-
-  this.updateCurrentFrame();
-};
-
-Editor.prototype.lastFrame = function() {
-  if (this.frames.length === 0) {
-    return;
-  }
-
-  this.saveCurrentFrame();
-
-  if (this.currentFrame > 0) {
-    this.currentFrame--;
-    this.updateCurrentFrame();
-  }
-};
-
-Editor.prototype.saveCurrentFrame = function() {
-  this.frames[this.currentFrame] = {
-    data: this.blocks.serialize()
-  };
-};
-
-Editor.prototype.serialize = function() {
-  this.saveCurrentFrame();
-
-  var json = {};
-  json.frames = this.frames;
-
-  return json;
-};
-
-Editor.prototype.deserialize = function(json) {
-  this.frames = json.frames || [];
-  this.updateCurrentFrame();
-  this.updateSize(this.blocks.dim);
-};
-
 Editor.prototype.updateTool = function() {
   if (this.tool != null) {
     if (this.tool.dispose != null) {
@@ -404,47 +374,48 @@ Editor.prototype.drawSelection = function() {
   }
 };
 
-Editor.prototype.play = function() {
-  if (this.frames <= 1) {
-    return;
-  }
-
-  if (this.playing) {
-    return;
-  }
-
-  this.playing = true;
-
-  var self = this;
-  var interval = function() {
-    self.nextFrame(true);
-    self.playTimeout = setTimeout(interval, 1000 / self.frameRate);
-  };
-
-  interval();
-};
-
-Editor.prototype.stop = function() {
-  if (!this.playing) {
-    return;
-  }
-
-  clearTimeout(this.playTimeout);
-  this.playing = false;
-};
-
 Editor.prototype.createNew = function() {
-  this.stop();
-  this.frames = [];
   this.blocks.clear();
-  this.updateSize(this.config['editor_default_size']);
+  var save = this.blocks.serialize();
+  this.saves.push(save);
+  this.updateScreenshotAtIndex(this.saves.length - 1);
+  this.prefabsBar.highlight(this.saves.length - 1);
+};
+
+Editor.prototype.removeSelected = function() {
+  var selectedIndex = this.prefabsBar.selectedIndex;
+
+  this.saves.splice(selectedIndex, 1);
+
+  this.updateScreenshots();
+
+  if (selectedIndex > this.saves.length - 1) {
+    selectedIndex = this.saves.length - 1;
+  }
+
+  if (selectedIndex >= 0) {
+    this.blocks.deserialize(this.saves[selectedIndex]);
+  }else {
+    this.blocks.clear();
+  }
+};
+
+Editor.prototype.createClone = function() {
+  var save = this.blocks.serialize();
+  this.saves.push(save);
+  this.updateScreenshotAtIndex(this.saves.length - 1);
+  this.prefabsBar.highlight(this.saves.length - 1);
 };
 
 Editor.prototype.screenshot = function(data) {
-  var renderer = new THREE.WebGLRenderer({
-    alpha: true
-  });
-  renderer.setClearColor(0xffffff, 0.0);
+  if (this.screenshotRenderer == null) {
+    this.screenshotRenderer = new THREE.WebGLRenderer({
+      alpha: true
+    });
+    this.screenshotRenderer.setClearColor(0xffffff, 0.0);
+  }
+
+  var renderer = this.screenshotRenderer;
 
   var width = 100;
   var height = 100;
@@ -482,15 +453,29 @@ Editor.prototype.screenshot = function(data) {
   renderer.render(scene, camera);
   imgData = renderer.domElement.toDataURL();
 
+  renderer.dispose();
+
   return imgData;
 };
 
-Editor.prototype.getSaves = function() {
-  try {
-    return JSON.parse(window.localStorage.getItem('b_saves') || {});
-  } catch (err) {
-    return {};
+Editor.prototype.load = function(data) {
+  this.blocks.deserialize(data);
+
+  this.blocks.tick();
+
+  if (this.tool.onLoad != null) {
+    this.tool.onLoad();
   }
+
+  this.updateSize(this.blocks.dim);
+};
+
+Editor.prototype.reset = function() {
+  this.saveService.reset();
+};
+
+Editor.prototype.save = function() {
+  this.saveService.save(this.saves);
 };
 
 module.exports = Editor;

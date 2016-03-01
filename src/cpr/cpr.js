@@ -1,9 +1,11 @@
 module.exports = function(opts) {
   opts = opts || {};
-  var palette = opts.palette || [];
+  var dataToLoad = opts.data || [];
   var onPick = opts.onPick || function() {};
   var blockWidth = opts.blockWidth || 20;
   var blockHeight = opts.blockHeight || 20;
+  var columns = opts.columns || 16;
+  var disableHighlight = opts.disableHighlight || false;
 
   var container = document.createElement('div');
   container.style.position = 'absolute';
@@ -16,50 +18,73 @@ module.exports = function(opts) {
   };
 
   var blocks = [];
+  var data = [];
 
-  for (var i = 0; i < palette.length; i++) {
-    var row = palette[i];
-    for (var j = 0; j < row.length; j++) {
-      addColorBlock(i, j, row[j]);
-    }
+  for (var i = 0; i < dataToLoad.length; i++) {
+    add(dataToLoad[i]);
   }
 
   updateContainer();
 
-  function addColorBlock(row, column, color) {
-    var div = document.createElement('div');
-    div.style.backgroundColor = color;
-    position(div, row, column);
-    container.appendChild(div);
-
-    var columns = blocks[row] || (blocks[row] = []);
-    columns[column] = div;
+  function getRow(index) {
+    return Math.floor(index / columns);
   };
 
-  function add(row, column, obj) {
-    var identifier;
-    var element;
+  function getColumn(index) {
+    return index % columns;
+  };
 
+  function getRows() {
+    return Math.ceil(data.length / columns);
+  };
+
+  function getIndex(row, column) {
+    return row * columns + column;
+  };
+
+  function remove(index) {
+    container.removeChild(blocks[index]);
+    blocks[index] = undefined;
+    data[index] = undefined;
+  };
+
+  function set(index, obj) {
+    if (data[index] != null) {
+      remove(index);
+    };
+
+    var row = getRow(index);
+    var column = getColumn(index);
+
+    var element;
     if (obj.imgData != null) {
       element = document.createElement('img');
-      position(element, row, column);
       element.src = obj.imgData;
-      container.appendChild(element);
-
-      identifier = obj.identifier;
+    } else if (obj.src != null) {
+      element = document.createElement('img');
+      element.src = obj.src;
+    } else {
+      var color = obj;
+      element = document.createElement('div');
+      element.style.backgroundColor = color;
     }
 
-    if (blocks[row] == null) {
-      blocks[row] = [];
-    }
-    blocks[row][column] = element;
+    container.appendChild(element);
+    position(element, row, column);
 
-    if (palette[row] == null) {
-      palette[row] = [];
-    }
-    palette[row][column] = identifier;
+    blocks[index] = element;
+    data[index] = obj;
 
     updateContainer();
+
+    if (selectedIndex == -1) {
+      highlight(0);
+    }
+  };
+
+  function add(obj) {
+    var index = blocks.length;
+    set(index, obj);
   };
 
   function position(element, row, column) {
@@ -71,25 +96,23 @@ module.exports = function(opts) {
     element.style.display = 'inline-block';
   };
 
-  function getMaxColumns() {
-    var max = 0;
-    for (var i = 0; i < palette.length; i++) {
-      if (palette[i].length > max) {
-        max = palette[i].length;
-      }
-    }
-
-    return max;
-  };
-
   function updateContainer() {
-    container.style.width = getMaxColumns() * blockWidth + 'px';
-    container.style.height = palette.length * blockHeight + 'px';
+    container.style.width = columns * blockWidth + 'px';
+    container.style.height = getRows() * blockHeight + 'px';
   };
 
   var highlightDiv = null;
+  var selectedIndex = -1;
 
-  function highlight(row, column) {
+  function highlight(index) {
+    if (disableHighlight) {
+      return;
+    }
+
+    selectedIndex = index;
+    var row = getRow(index);
+    var column = getColumn(index);
+
     if (highlightDiv == null) {
       highlightDiv = document.createElement('div');
       highlightDiv.style.position = 'absolute';
@@ -104,27 +127,43 @@ module.exports = function(opts) {
     highlightDiv.style.top = row * blockHeight - 1 + 'px';
   };
 
+  function clear() {
+    for (var i = 0; i < data.length; i++) {
+      remove(i);
+    }
+
+    data = [];
+  };
+
   container.addEventListener('mousedown', function(e) {
     var mouseX = e.pageX - container.offsetLeft;
     var mouseY = e.pageY - container.offsetTop;
     var row = Math.floor(mouseY / blockHeight);
     var column = Math.floor(mouseX / blockWidth);
+    var index = getIndex(row, column);
 
-    if (palette[row] == null) {
+    if (data[index] == null) {
       return;
     }
 
-    var color = palette[row][column];
-    highlight(row, column);
-    onPick(color);
+    var obj = data[index];
+    highlight(index);
+    onPick(obj, index);
   });
 
-  highlight(0, 0);
+  if (data.length > 0) {
+    highlight(0);
+  }
 
   return {
     highlight: highlight,
     add: add,
-    palette: palette,
-    domElement: container
+    set: set,
+    clear: clear,
+    data: data,
+    domElement: container,
+    get selectedIndex() {
+      return selectedIndex;
+    }
   }
 };

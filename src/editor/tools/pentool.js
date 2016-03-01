@@ -25,6 +25,10 @@ var PenTool = function(editor) {
   this.mouseSampleInterval = 4;
 };
 
+PenTool.prototype.onLoad = function() {
+  this.updateObjShadow();
+};
+
 PenTool.prototype.tick = function() {
   var coord = this.getCoordToAdd(this.input.mouse);
 

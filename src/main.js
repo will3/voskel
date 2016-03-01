@@ -28,6 +28,9 @@ var devConsole = require('./services/devconsole')({
 });
 app.value('devConsole', devConsole);
 
+var saveService = require('./services/saveservice')();
+app.value('saveService', saveService);
+
 stats(app);
 
 // Attach camera control

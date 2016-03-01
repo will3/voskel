@@ -6,7 +6,7 @@ var Blocks = function(object) {
   this.object = object;
   this.type = 'blocks';
 
-  this.dim = [32, 32, 32];
+  this.dim = [16, 16, 16];
   this.chunk = ndarray([], this.dim);
 
   this.mesh = null;
@@ -195,7 +195,6 @@ Blocks.prototype.getOrAddColorIndex = function(color) {
     var material = new THREE.MeshLambertMaterial({
       color: new THREE.Color(this.palette[index])
     });
-    console.log(material.color);
     this.material.materials.push(material);
     return this.palette.length - 1;
   } else {

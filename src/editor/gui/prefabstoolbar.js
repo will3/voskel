@@ -27,8 +27,14 @@ module.exports = function(editor) {
       } else if (button === 'clone') {
         editor.createClone();
       }
-    }
+    },
+    customPlacement: true
   });
 
+  var gui = document.getElementById('gui');
+  gui.appendChild(bar.domElement);
+
+  bar.domElement.style.position = 'absolute';
+  bar.domElement.style.left = '20px';
   bar.domElement.style.bottom = '180px';
 };

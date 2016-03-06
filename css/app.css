@@ -27,10 +27,19 @@ button {
 }
 
 #container,
-#canvas {
+#canvas,
+#gui {
     position: absolute;
     width: 100%;
     height: 100%;
+}
+
+#gui {
+    pointer-events: none;
+}
+
+#gui * {
+    pointer-events: auto;
 }
 
 .prompt {
@@ -72,9 +81,9 @@ button {
     border: 2px solid #000;
     background-color: #333;
     outline: none;
-    padding-bottom: 4px;
     font-size: 16px;
     width: 100%;
+    padding: 5px 5px 3px 5px;
 }
 
 .panel > .section > button {
@@ -94,4 +103,16 @@ button {
 .panel > .section > button.selected {
     background-color: #FFF;
     color: #000;
+}
+
+.cpr.arrowbar .block {
+    background-color: #000;
+}
+
+.cpr.toolbar .block {
+    background-color: #000;
+}
+
+.cpr.filebar .block {
+    background-color: #000;
 }

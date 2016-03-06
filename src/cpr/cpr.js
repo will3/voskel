@@ -7,6 +7,7 @@ module.exports = function(opts) {
   var customPlacement = opts.customPlacement || false;
   var hideHighlight = opts.hideHighlight || false;
   var showTooltip = opts.showTooltip || false;
+  var paddingRight = opts.paddingRight || 0;
 
   var blockWidth = opts.blockWidth || 20;
   var blockHeight = opts.blockHeight || 20;
@@ -14,15 +15,14 @@ module.exports = function(opts) {
   var disableHighlight = opts.disableHighlight || false;
 
   var container = document.createElement('div');
+  container.className = 'cpr';
 
   if (showTooltip) {
     var tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+
     tooltip.style.position = 'absolute';
     tooltip.style.visibility = 'hidden';
-    tooltip.style.width = '200px';
-    tooltip.style.backgroundColor = '#666666';
-    tooltip.style.color = '#f6f6f6';
-    tooltip.style.padding = '5px';
     container.appendChild(tooltip);
   }
 
@@ -89,6 +89,7 @@ module.exports = function(opts) {
       element.style.backgroundColor = color;
     }
 
+    element.className = 'block';
     container.appendChild(element);
     position(element, row, column);
 
@@ -109,16 +110,15 @@ module.exports = function(opts) {
 
   function position(element, row, column) {
     element.style.position = 'absolute';
-    element.style.left = column * blockWidth + 'px';
+    element.style.left = column * (blockWidth + paddingRight) + 'px';
     element.style.top = row * blockHeight + 'px';
     element.style.width = blockWidth + 'px';
     element.style.height = blockHeight + 'px';
-    element.style.display = 'inline-block';
   };
 
   function updateContainer() {
     var numberOfColumns = data.length > columns ? columns : data.length;
-    container.style.width = numberOfColumns * blockWidth + 'px';
+    container.style.width = numberOfColumns * (blockWidth + paddingRight) + 'px';
     container.style.height = getRows() * blockHeight + 'px';
   };
 
@@ -137,15 +137,14 @@ module.exports = function(opts) {
     if (!hideHighlight) {
       if (highlightDiv == null) {
         highlightDiv = document.createElement('div');
+        highlightDiv.className = 'highlight';
         highlightDiv.style.position = 'absolute';
         highlightDiv.style.width = blockWidth + 'px';
         highlightDiv.style.height = blockHeight + 'px';
-        highlightDiv.style.display = 'inline-block';
-        highlightDiv.style.border = '1px solid #FFFFFF';
         container.appendChild(highlightDiv);
       }
 
-      highlightDiv.style.left = column * blockWidth - 1 + 'px';
+      highlightDiv.style.left = column * (blockWidth + paddingRight) - 1 + 'px';
       highlightDiv.style.top = row * blockHeight - 1 + 'px';
     }
   };
@@ -177,7 +176,7 @@ module.exports = function(opts) {
     var mouseX = e.pageX - container.offsetLeft;
     var mouseY = e.pageY - container.offsetTop;
     var row = Math.floor(mouseY / blockHeight);
-    var column = Math.floor(mouseX / blockWidth);
+    var column = Math.floor(mouseX / (blockWidth + paddingRight));
     var index = getIndex(row, column);
 
     if (data[index] == null) {

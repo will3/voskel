@@ -1,8 +1,6 @@
 var cpr = require('../../cpr/cpr');
 
 module.exports = function(editor) {
-  var container = document.getElementById('container');
-
   var data = [{
     src: '/images/arrow1.png',
     index: 0,
@@ -36,6 +34,7 @@ module.exports = function(editor) {
     hideHighlight: true,
     customPlacement: true,
     showTooltip: true,
+    paddingRight: 5,
     onPick: function(obj) {
       var index = obj.index;
 
@@ -58,7 +57,10 @@ module.exports = function(editor) {
     }
   });
 
-  container.appendChild(bar.domElement);
+  var gui = document.getElementById('gui');
+  gui.appendChild(bar.domElement);
+  
+  bar.domElement.classList.add('arrowbar');
   bar.domElement.style.position = 'absolute';
   bar.domElement.style.top = '80px';
   bar.domElement.style.left = '20px';

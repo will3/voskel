@@ -7,9 +7,15 @@ module.exports = function(editor) {
       editor.load(editor.prefabs[index]);
     },
     blockWidth: 48,
-    blockHeight: 48
+    blockHeight: 48,
+    customPlacement: true
   });
 
+  var gui = document.getElementById('gui');
+  gui.appendChild(bar.domElement);
+
+  bar.domElement.style.position = 'absolute';
+  bar.domElement.style.left = '20px';
   bar.domElement.style.bottom = '120px';
 
   return bar;

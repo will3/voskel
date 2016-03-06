@@ -30,11 +30,14 @@ module.exports = function(editor) {
       editor.updateTool();
     },
     customPlacement: true,
-    showTooltip: true
+    showTooltip: true,
+    paddingRight: 5
   });
 
-  var container = document.getElementById('container');
-  container.appendChild(bar.domElement);
+  var gui = document.getElementById('gui');
+  gui.appendChild(bar.domElement);
+
+  bar.domElement.classList.add('toolbar');
 
   bar.domElement.style.position = 'absolute';
   bar.domElement.style.top = 20 + 'px';

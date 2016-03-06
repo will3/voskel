@@ -1,0 +1,22 @@
+.clearfix:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.cpr {}
+
+.cpr .block {}
+
+.cpr .highlight {
+    border: 1px solid #FFF;
+}
+
+.cpr .tooltip {
+    border: 2px solid #111;
+    width: 200px;
+    background-color: #666;
+    color: #f6f6f6;
+    padding: 5px;
+    z-index: 1;
+}

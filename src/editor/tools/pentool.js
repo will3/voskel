@@ -18,7 +18,10 @@ var PenTool = function(editor) {
 };
 
 PenTool.prototype.tick = function() {
-
+  if (this.editor.editLock) {
+    return;
+  }
+  
   var isClearColor = this.editor.selectedColor == null;
 
   this.editor.highlightCoord = isClearColor ?

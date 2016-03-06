@@ -28,8 +28,8 @@ var devConsole = require('./services/devconsole')({
 });
 app.value('devConsole', devConsole);
 
-var saveService = require('./services/saveservice')();
-app.value('saveService', saveService);
+var prefabService = require('./services/prefabservice')();
+app.value('prefabService', prefabService);
 
 stats(app);
 

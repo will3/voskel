@@ -1,3 +1,5 @@
+var EditorTools = require('../editortools');
+
 var SampleTool = function(editor) {
   this.editor = editor;
   this.input = this.editor.input;
@@ -14,11 +16,13 @@ SampleTool.prototype.tick = function() {
     if (coord != null) {
       var index = this.blocks.getAtCoord(coord);
       var color = this.blocks.palette[index];
-
       this.editor.setSelectedColor(color);
+
     } else {
       this.editor.setSelectedColor(null);
     }
+
+    // this.editor.setTool(EditorTools.Pen);
   }
 };
 

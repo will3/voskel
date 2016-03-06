@@ -1,6 +1,6 @@
-var SaveService = function() {};
+var PrefabService = function() {};
 
-SaveService.prototype.load = function() {
+PrefabService.prototype.load = function() {
   try {
     var saves = JSON.parse(window.localStorage.getItem('b_saves') || []);
     return saves;
@@ -9,14 +9,14 @@ SaveService.prototype.load = function() {
   }
 };
 
-SaveService.prototype.save = function(data) {
+PrefabService.prototype.save = function(data) {
   window.localStorage.setItem('b_saves', JSON.stringify(data));
 };
 
-SaveService.prototype.reset = function() {
+PrefabService.prototype.reset = function() {
   window.localStorage.setItem('b_saves', '');
 };
 
 module.exports = function() {
-  return new SaveService();
+  return new PrefabService();
 };

@@ -23,13 +23,6 @@ module.exports = function(editor, devConsole) {
     editor.createNew();
   };
 
-  devConsole.commands['tool'] = function(args) {
-    if (editor.toolName !== args._[0]) {
-      editor.toolName = args._[0];
-      editor.updateTool();
-    }
-  };
-
   devConsole.commands['mirror'] = function(args) {
     if (args._.length === 0) {
       throw new Error('please specify x y z or none');
@@ -56,10 +49,6 @@ module.exports = function(editor, devConsole) {
     }
   };
 
-  devConsole.commands['screen'] = function(args) {
-    editor.screenshot();
-  };
-
   devConsole.commands['reset'] = function() {
     editor.reset();
   };
@@ -67,5 +56,4 @@ module.exports = function(editor, devConsole) {
   devConsole.commands['save'] = function() {
     editor.save();
   };
-
 }

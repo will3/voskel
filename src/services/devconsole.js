@@ -29,7 +29,6 @@ module.exports = function(opts) {
   input.spellcheck = false;
   input.style.color = '#FFFFFF';
   input.style.fontSize = '16px';
-  input.style.fontFamily = 'Arial';
   input.style.padding = '2px 2px 0px 2px';
   input.value = '> ';
 
@@ -44,7 +43,6 @@ module.exports = function(opts) {
   textSpan.style.height = '100px';
   textSpan.style.color = '#FFFFFF';
   textSpan.style.fontSize = '16px';
-  textSpan.style.fontFamily = 'Arial';
   textSpan.style.padding = '0px 2px 2px 2px';
 
   div.appendChild(textSpan);

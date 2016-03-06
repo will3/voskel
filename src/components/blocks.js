@@ -19,6 +19,8 @@ var Blocks = function(object) {
   this.object.add(this.obj);
 
   this.palette = [null];
+
+  this.userData = {};
 };
 
 Blocks.prototype.set = function(x, y, z, b) {
@@ -99,7 +101,8 @@ Blocks.prototype.serialize = function() {
   return {
     dim: this.dim,
     chunkData: arrayUtils.clone(this.chunk.data),
-    palette: this.palette
+    palette: this.palette,
+    userData: this.userData
   };
 };
 
@@ -116,6 +119,8 @@ Blocks.prototype.deserialize = function(json) {
 
   this.dimNeedsUpdate = true;
   this.dirty = true;
+
+  this.userData = json.userData;
 };
 
 Blocks.prototype.updateMesh = function() {

@@ -5,6 +5,8 @@ module.exports = function(opts) {
   var onHover = opts.onHover || function() {};
   var onLeave = opts.onLeave || function() {};
   var customPlacement = opts.customPlacement || false;
+  var hideHighlight = opts.hideHighlight || false;
+  var showTooltip = opts.showTooltip || false;
 
   var blockWidth = opts.blockWidth || 20;
   var blockHeight = opts.blockHeight || 20;
@@ -12,6 +14,17 @@ module.exports = function(opts) {
   var disableHighlight = opts.disableHighlight || false;
 
   var container = document.createElement('div');
+
+  if (showTooltip) {
+    var tooltip = document.createElement('div');
+    tooltip.style.position = 'absolute';
+    tooltip.style.visibility = 'hidden';
+    tooltip.style.width = '200px';
+    tooltip.style.backgroundColor = '#666666';
+    tooltip.style.color = '#f6f6f6';
+    tooltip.style.padding = '5px';
+    container.appendChild(tooltip);
+  }
 
   if (!customPlacement) {
     container.style.position = 'absolute';
@@ -104,7 +117,8 @@ module.exports = function(opts) {
   };
 
   function updateContainer() {
-    container.style.width = columns * blockWidth + 'px';
+    var numberOfColumns = data.length > columns ? columns : data.length;
+    container.style.width = numberOfColumns * blockWidth + 'px';
     container.style.height = getRows() * blockHeight + 'px';
   };
 
@@ -120,18 +134,20 @@ module.exports = function(opts) {
     var row = getRow(index);
     var column = getColumn(index);
 
-    if (highlightDiv == null) {
-      highlightDiv = document.createElement('div');
-      highlightDiv.style.position = 'absolute';
-      highlightDiv.style.width = blockWidth + 'px';
-      highlightDiv.style.height = blockHeight + 'px';
-      highlightDiv.style.display = 'inline-block';
-      highlightDiv.style.border = '1px solid #FFFFFF';
-      container.appendChild(highlightDiv);
-    }
+    if (!hideHighlight) {
+      if (highlightDiv == null) {
+        highlightDiv = document.createElement('div');
+        highlightDiv.style.position = 'absolute';
+        highlightDiv.style.width = blockWidth + 'px';
+        highlightDiv.style.height = blockHeight + 'px';
+        highlightDiv.style.display = 'inline-block';
+        highlightDiv.style.border = '1px solid #FFFFFF';
+        container.appendChild(highlightDiv);
+      }
 
-    highlightDiv.style.left = column * blockWidth - 1 + 'px';
-    highlightDiv.style.top = row * blockHeight - 1 + 'px';
+      highlightDiv.style.left = column * blockWidth - 1 + 'px';
+      highlightDiv.style.top = row * blockHeight - 1 + 'px';
+    }
   };
 
   function clear() {
@@ -141,6 +157,21 @@ module.exports = function(opts) {
 
     data = [];
   };
+
+  function isDescendant(parent, child) {
+    if (child == null) {
+      return false;
+    }
+
+    var node = child.parentNode;
+    while (node != null) {
+      if (node == parent) {
+        return true;
+      }
+      node = node.parentNode;
+    }
+    return false;
+  }
 
   container.addEventListener('mousedown', function(e) {
     var mouseX = e.pageX - container.offsetLeft;
@@ -173,10 +204,25 @@ module.exports = function(opts) {
 
     var obj = data[index];
     onHover(obj, index);
+
+    if (showTooltip && obj.tooltip != null) {
+      tooltip.style.visibility = 'visible';
+      tooltip.style.left = mouseX + 'px';
+      tooltip.style.top = mouseY + 'px';
+      if (tooltip.innerHTML !== obj.tooltip) {
+        tooltip.innerHTML = obj.tooltip;
+      }
+    }
   });
 
   container.addEventListener('mouseleave', function(e) {
-    onLeave(e);
+    if (!isDescendant(container, e.toElement)) {
+      onLeave(e);
+
+      if (showTooltip) {
+        tooltip.style.visibility = 'hidden';
+      }
+    }
   });
 
   if (data.length > 0) {
@@ -195,6 +241,9 @@ module.exports = function(opts) {
     },
     get mouse() {
       return mouse;
+    },
+    get tooltip() {
+      return tooltip;
     }
   }
 };

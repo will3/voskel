@@ -2,7 +2,8 @@ var EditorTools = {
   Pen: 'Pen',
   Select: 'Select',
   Sample: 'Sample',
-  Camera: 'Camera'
+  Camera: 'Camera',
+  Fill: 'Fill'
 };
 
 module.exports = EditorTools;

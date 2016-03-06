@@ -2,16 +2,23 @@ module.exports = function(opts) {
   opts = opts || {};
   var dataToLoad = opts.data || [];
   var onPick = opts.onPick || function() {};
+  var onHover = opts.onHover || function() {};
+  var onLeave = opts.onLeave || function() {};
+  var customPlacement = opts.customPlacement || false;
+
   var blockWidth = opts.blockWidth || 20;
   var blockHeight = opts.blockHeight || 20;
-  var columns = opts.columns || 16;
+  var columns = opts.columns || 14;
   var disableHighlight = opts.disableHighlight || false;
 
   var container = document.createElement('div');
-  container.style.position = 'absolute';
-  container.style.left = '20px';
-  container.style.bottom = '20px';
-  document.body.appendChild(container);
+
+  if (!customPlacement) {
+    container.style.position = 'absolute';
+    container.style.left = '20px';
+    container.style.bottom = '20px';
+    document.body.appendChild(container);
+  }
 
   container.onfocus = function() {
     container.style['outline'] = 'none';
@@ -151,6 +158,27 @@ module.exports = function(opts) {
     onPick(obj, index);
   });
 
+  var mouse = null;
+  container.addEventListener('mousemove', function(e) {
+    mouse = e;
+    var mouseX = e.pageX - container.offsetLeft;
+    var mouseY = e.pageY - container.offsetTop;
+    var row = Math.floor(mouseY / blockHeight);
+    var column = Math.floor(mouseX / blockWidth);
+    var index = getIndex(row, column);
+
+    if (data[index] == null) {
+      return;
+    }
+
+    var obj = data[index];
+    onHover(obj, index);
+  });
+
+  container.addEventListener('mouseleave', function(e) {
+    onLeave(e);
+  });
+
   if (data.length > 0) {
     highlight(0);
   }
@@ -164,6 +192,9 @@ module.exports = function(opts) {
     domElement: container,
     get selectedIndex() {
       return selectedIndex;
+    },
+    get mouse() {
+      return mouse;
     }
   }
 };

@@ -17,9 +17,9 @@ var DragCamera = function(camera, input) {
   this.minPitch = -Math.PI / 2 + 0.01;
   this.zoomRate = 1.1;
 
-  this.lockRotation = false;
-
   this.updateCamera();
+
+  this.lock = false;
 };
 
 DragCamera.$inject = ['input'];
@@ -31,13 +31,15 @@ DragCamera.prototype.tick = function() {
 };
 
 DragCamera.prototype.processInput = function() {
-  if (this.input.mouseHold() && !this.lockRotation) {
-    var diff = new THREE.Vector2().subVectors(this.input.mouse, this.lastMouse);
-    this.rotation.y += diff.x * this.mouseSpeedY;
-    this.rotation.x += diff.y * this.mouseSpeedX;
+  if (this.input.mouseHold()) {
+    if (!this.lock) {
+      var diff = new THREE.Vector2().subVectors(this.input.mouse, this.lastMouse);
+      this.rotation.y += diff.x * this.mouseSpeedY;
+      this.rotation.x += diff.y * this.mouseSpeedX;
 
-    if (this.rotation.x < this.minPitch) this.rotation.x = this.minPitch;
-    if (this.rotation.x > this.maxPitch) this.rotation.x = this.maxPitch;
+      if (this.rotation.x < this.minPitch) this.rotation.x = this.minPitch;
+      if (this.rotation.x > this.maxPitch) this.rotation.x = this.maxPitch;
+    }
   }
 
   var rotateRight = 0;

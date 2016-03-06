@@ -2,7 +2,7 @@ var SaveService = function() {};
 
 SaveService.prototype.load = function() {
   try {
-    var saves = JSON.parse(window.localStorage.getItem('b_saves'));
+    var saves = JSON.parse(window.localStorage.getItem('b_saves') || []);
     return saves;
   } catch (err) {
     return [];

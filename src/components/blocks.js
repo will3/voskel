@@ -52,10 +52,7 @@ Blocks.prototype.tick = function() {
     this.dimNeedsUpdate = false;
   }
 
-  if (this.dirty) {
-    this._updateMesh();
-    this.dirty = false;
-  }
+  this.updateMesh();
 };
 
 Blocks.prototype.clear = function() {
@@ -121,7 +118,14 @@ Blocks.prototype.deserialize = function(json) {
   this.dirty = true;
 };
 
-Blocks.prototype._updateMesh = function(result) {
+Blocks.prototype.updateMesh = function() {
+  if (this.dirty) {
+    this._updateMesh();
+    this.dirty = false;
+  }
+};
+
+Blocks.prototype._updateMesh = function() {
   if (this.mesh != null) {
     this.obj.remove(this.mesh);
   }

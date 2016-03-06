@@ -1,7 +1,11 @@
 var array = {
   indexOf: function(array, element) {
+    var predicate = typeof element === 'function' ? element : function(v) {
+      return v === element;
+    };
+
     for (var i = 0; i < array.length; i++) {
-      if (array[i] === element) {
+      if (predicate(array[i])) {
         return i;
       }
     }

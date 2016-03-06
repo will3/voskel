@@ -17,10 +17,8 @@ var SelectTool = function(editor) {
 };
 
 SelectTool.prototype.tick = function() {
-  this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
   if (this.input.mouseHold(0)) {
-    this.editor.setLockCamera(true);
     var mouse = this.input.mouse.clone();
     if (this.points.length === 0) {
       this.points.push(mouse.toArray());
@@ -35,7 +33,6 @@ SelectTool.prototype.tick = function() {
     if (this.points.length > 0) {
       this.updateSelection();
     }
-    this.editor.setLockCamera(false);
     this.points = [];
   }
 

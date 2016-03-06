@@ -4,9 +4,15 @@ var CBuffer = require('cbuffer');
 var blocksComponent = require('../components/blocks');
 var dragCameraComponent = require('../components/dragcamera');
 var editorConsole = require('./editorconsole');
-var editorTools = require('./editortools');
+var EditorTools = require('./editortools');
 var OffsetCommand = require('./commands/offsetcommand');
 var Blocks = require('../components/blocks');
+var arrayUtils = require('../utils/arrayutils');
+var toolbar = require('./bars/toolbar');
+var PenTool = require('./tools/pentool');
+var SampleTool = require('./tools/sampletool');
+var SelectTool = require('./tools/selecttool');
+var CameraTool = require('./tools/cameratool');
 
 var Editor = function(object, app, input, camera, devConsole, config, palette, canvas, saveService) {
 
@@ -54,13 +60,13 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
 
   this.prefabToolbar = null;
 
-  this.toolNames = ['pen', 'select'];
+  this.toolbar = null;
 
-  this.toolName = 'pen';
+  this.toolNames = [EditorTools.Pen, EditorTools.Sample, EditorTools.Select, EditorTools.Camera];
+
+  this.toolName = EditorTools.Pen;
 
   this.tool = null;
-
-  this.lockCamera = false;
 
   this.selections = [];
 
@@ -74,6 +80,16 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
   this.saves = [];
 
   this.screenshotRenderer = null;
+
+  // Copy of block object
+  this.lastBlocks = null;
+
+  this.objHighlight = null;
+
+  this.sn = 0.0001;
+
+  this.highlightCoord = null;
+
 };
 
 Editor.$inject = ['app', 'input', 'camera', 'devConsole', 'config', 'palette', 'canvas', 'saveService'];
@@ -84,6 +100,7 @@ Editor.prototype.start = function() {
   this.saves = this.saveService.load();
 
   this.blocks = this.app.attach(this.object, blocksComponent);
+
   this.dragCamera = this.app.attach(this.camera, dragCameraComponent);
 
   this.updateTool();
@@ -92,13 +109,14 @@ Editor.prototype.start = function() {
 
   this.selectedColor = this.palette[0];
 
+  this.toolbar = toolbar(this);
+
   // Create color picker
   var self = this;
   this.colorBar = cpr({
     data: this.palette,
     onPick: function(color) {
-      console.log(color);
-      self.selectedColor = color;
+      self.selectedColor = color.isClearColor ? null : color;
     }
   });
 
@@ -151,13 +169,30 @@ Editor.prototype.start = function() {
   this.updateScreenshots();
 };
 
+Editor.prototype.setTool = function(name) {
+  var index = arrayUtils.indexOf(this.toolNames, name);
+  if (index === -1) {
+    return;
+  }
+
+  this.toolbar.highlight(index);
+  this.toolName = name;
+  this.updateTool();
+};
+
 Editor.prototype.tick = function() {
   if (!this._started) {
     this.start();
     this._started = true;
   }
 
+  this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+  this.dragCamera.lock = this.getCoordAbove() != null || this.toolName === EditorTools.Select;
+
   this.tool.tick();
+
+  this.updateHighlight(this.highlightCoord);
 
   this.drawSelection();
 
@@ -203,11 +238,13 @@ Editor.prototype.tick = function() {
   }
 
   if (this.input.keyDown('1')) {
-    this.toolName = this.toolNames[0];
-    this.updateTool();
+    this.setTool(this.toolNames[0]);
   } else if (this.input.keyDown('2')) {
-    this.toolName = this.toolNames[1];
-    this.updateTool();
+    this.setTool(this.toolNames[1]);
+  } else if (this.input.keyDown('3')) {
+    this.setTool(this.toolNames[2]);
+  } else if (this.input.keyDown('4')) {
+    this.setTool(this.toolNames[3]);
   }
 };
 
@@ -349,13 +386,17 @@ Editor.prototype.updateTool = function() {
     }
   }
 
-  var factory = editorTools[this.toolName];
-  this.tool = factory(this);
-};
-
-Editor.prototype.setLockCamera = function(value) {
-  this.lockCamera = value;
-  this.dragCamera.lockRotation = value;
+  if (this.toolName === EditorTools.Pen) {
+    this.tool = new PenTool(this);
+  } else if (this.toolName === EditorTools.Sample) {
+    this.tool = new SampleTool(this);
+  } else if (this.toolName === EditorTools.Select) {
+    this.tool = new SelectTool(this);
+  } else if (this.toolName === EditorTools.Camera) {
+    this.tool = new CameraTool(this);
+  } else {
+    throw new Error('cannot make tool named: ' + this.toolName);
+  }
 };
 
 Editor.prototype.drawSelection = function() {
@@ -395,7 +436,7 @@ Editor.prototype.removeSelected = function() {
 
   if (selectedIndex >= 0) {
     this.blocks.deserialize(this.saves[selectedIndex]);
-  }else {
+  } else {
     this.blocks.clear();
   }
 };
@@ -461,13 +502,9 @@ Editor.prototype.screenshot = function(data) {
 Editor.prototype.load = function(data) {
   this.blocks.deserialize(data);
 
-  this.blocks.tick();
-
-  if (this.tool.onLoad != null) {
-    this.tool.onLoad();
-  }
-
   this.updateSize(this.blocks.dim);
+
+  this.updateLastBlocks();
 };
 
 Editor.prototype.reset = function() {
@@ -477,5 +514,96 @@ Editor.prototype.reset = function() {
 Editor.prototype.save = function() {
   this.saveService.save(this.saves);
 };
+
+Editor.prototype.updateLastBlocks = function() {
+  this.blocks.updateMesh();
+  this.lastBlocks = this.blocks.obj.clone();
+  this.lastBlocks.updateMatrixWorld();
+};
+
+Editor.prototype.getCoordAbove = function(point) {
+  point = point || this.input.mouse;
+  var objects = [];
+  if (this.lastBlocks != null) objects.push(this.lastBlocks);
+  if (this.objGround != null) objects.push(this.objGround);
+  return this.getCoord(objects, point, -this.sn);
+};
+
+Editor.prototype.getCoordBelow = function(point) {
+  point = point || this.input.mouse;
+  var objects = [];
+  if (this.lastBlocks != null) objects.push(this.lastBlocks);
+  var coord = this.getCoord(objects, point, this.sn);
+
+  if (coord == null && this.objGround != null) {
+    return this.getCoord([this.objGround], point, -this.sn);
+  }
+
+  return coord;
+};
+
+Editor.prototype.getCoord = function(objects, atPoint, delta) {
+  var viewport = this.input.screenToViewport(atPoint);
+  var raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(viewport, this.camera);
+  var intersects = raycaster.intersectObjects(objects, true);
+
+  if (intersects.length === 0) {
+    return undefined;
+  }
+
+  var intersect = intersects[0];
+
+  var point = intersect.point;
+  var diff = point.clone().sub(this.camera.position);
+  diff = diff.setLength(diff.length() + (delta || 0));
+  point = this.camera.position.clone().add(diff);
+
+  var localPoint = this.blocks.obj.worldToLocal(point);
+  var coord = this.blocks.pointToCoord(localPoint);
+  coord = new THREE.Vector3(
+    Math.round(coord.x),
+    Math.round(coord.y),
+    Math.round(coord.z)
+  );
+
+  return coord;
+};
+
+Editor.prototype.updateHighlight = function(coord) {
+  if (this.objHighlight == null) {
+    var geometry = new THREE.BoxGeometry(1, 1, 1);
+    var material = new THREE.MeshBasicMaterial();
+    var mesh = new THREE.Mesh(geometry, material);
+    var wireframe = new THREE.EdgesHelper(mesh, 0xffffff);
+    this.objHighlight = new THREE.Object3D();
+    this.objHighlight.add(wireframe);
+    this.object.add(this.objHighlight);
+  }
+
+  if (coord == null) {
+    this.objHighlight.visible = false;
+    return;
+  }
+
+  coord = coord.clone().add(new THREE.Vector3(0.5, 0.5, 0.5));
+  this.objHighlight.visible = true;
+  var localPoint = this.blocks.coordToPoint(coord);
+  var worldPoint = this.blocks.obj.localToWorld(localPoint);
+  this.objHighlight.position.copy(worldPoint);
+};
+
+Editor.prototype.setSelectedColor = function(color) {
+  var index = arrayUtils.indexOf(this.palette, function(c) {
+    return color === c || (color == null && c.isClearColor);
+  });
+
+  if (index == -1) {
+    return;
+  }
+
+  this.selectedColor = color;
+  this.colorBar.highlight(index);
+}
 
 module.exports = Editor;

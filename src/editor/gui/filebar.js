@@ -14,7 +14,6 @@ module.exports = function(editor) {
     blockWidth: 32,
     blockHeight: 32,
     hideHighlight: true,
-    paddingRight: 5,
     onPick: function(obj) {
       var button = obj.button;
 
@@ -27,7 +26,7 @@ module.exports = function(editor) {
   var gui = document.getElementById('gui');
   gui.appendChild(bar.domElement);
 
-  bar.domElement.classList.add('filebar');
+  bar.domElement.classList.add('toolbar');
 
   bar.domElement.style.position = 'absolute';
   bar.domElement.style.left = 20 + 'px';

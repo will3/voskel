@@ -34,7 +34,6 @@ module.exports = function(editor) {
     hideHighlight: true,
     customPlacement: true,
     showTooltip: true,
-    paddingRight: 5,
     onPick: function(obj) {
       var index = obj.index;
 
@@ -59,8 +58,8 @@ module.exports = function(editor) {
 
   var gui = document.getElementById('gui');
   gui.appendChild(bar.domElement);
-  
-  bar.domElement.classList.add('arrowbar');
+
+  bar.domElement.classList.add('toolbar');
   bar.domElement.style.position = 'absolute';
   bar.domElement.style.top = '80px';
   bar.domElement.style.left = '20px';

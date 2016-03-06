@@ -4,7 +4,7 @@ module.exports = function(data) {
   container.className = 'panel';
 
   container.style.position = 'absolute';
-  container.style.right = 20 + 'px';
+  container.style.right = 40 + 'px';
   container.style.top = 20 + 'px';
   container.style.width = 200 + 'px';
 
@@ -46,7 +46,6 @@ var valueController = function(item) {
   var input = document.createElement('input');
   input.type = 'text';
   input.value = item.value;
-  input.className = 'value';
 
   section.appendChild(input);
 

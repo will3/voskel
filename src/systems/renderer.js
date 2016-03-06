@@ -2,7 +2,7 @@ var Stats = require('stats.js');
 
 module.exports = function(scene, camera, container) {
   var renderer = new THREE.WebGLRenderer();
-  renderer.setClearColor(0x333333);
+  renderer.setClearColor(0x222222);
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   container = container || document.body;

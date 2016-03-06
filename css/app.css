@@ -60,7 +60,7 @@ button {
     background-color: #333;
     font-size: 16px;
     outline: none;
-    color: white;
+    color: #eee;
     margin-right: 10px;
 }
 
@@ -71,15 +71,15 @@ button {
 }
 
 .panel > .section > .title {
-    color: white;
+    color: #eee;
     font-size: 16px;
     padding-bottom: 4px;
 }
 
-.panel > .section > .value {
-    color: white;
+.panel > .section > input[type='text'] {
+    color: #111;
     border: 2px solid #000;
-    background-color: #333;
+    background-color: #666;
     outline: none;
     font-size: 16px;
     width: 100%;
@@ -90,10 +90,11 @@ button {
     /*padding: 12px 10px;*/
     border: 2px solid #000;
     background-color: #333;
-    color: white;
+    color: #eee;
     border-right: none;
     font-size: 16px;
     outline: none;
+    padding: 5px 5px 3px 5px;
 }
 
 .panel > .section > button:last-child {
@@ -105,14 +106,15 @@ button {
     color: #000;
 }
 
-.cpr.arrowbar .block {
-    background-color: #000;
-}
-
 .cpr.toolbar .block {
-    background-color: #000;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border: 2px solid #000;
+    background-color: #333;
+    border-right: none;
 }
 
-.cpr.filebar .block {
-    background-color: #000;
+.cpr.toolbar .block:last-child {
+    border-right: 2px solid #000;
 }

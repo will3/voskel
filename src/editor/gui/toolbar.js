@@ -31,7 +31,7 @@ module.exports = function(editor) {
     },
     customPlacement: true,
     showTooltip: true,
-    paddingRight: 5
+    hideHighlight: true
   });
 
   var gui = document.getElementById('gui');

@@ -1,5 +1,4 @@
 var THREE = require('three');
-var cpr = require('../cpr/cpr');
 var CBuffer = require('cbuffer');
 var blocksComponent = require('../components/blocks');
 var dragCameraComponent = require('./dragcamera');
@@ -146,6 +145,10 @@ Editor.prototype.start = function() {
 
   this.load(this.prefabs[0]);
   this.updateScreenshots();
+
+  this.colorBar.highlight(0);
+  this.prefabsBar.highlight(0);
+  this.toolBar.highlight(0);
 };
 
 Editor.prototype.setTool = function(name) {
@@ -411,39 +414,44 @@ Editor.prototype.drawSelection = function() {
   }
 };
 
-Editor.prototype.createNew = function() {
+Editor.prototype.createNew = function(index) {
+  index = index || this.prefabs.length;
+
   this.blocks.clear();
   var prefab = this.blocks.serialize();
-  this.prefabs.push(prefab);
-  this.updateScreenshotAtIndex(this.prefabs.length - 1);
-  this.prefabIndex = this.prefabs.length - 1;
-  this.prefabsBar.highlight(this.prefabs.length - 1);
+  this.prefabs.splice(index, 0, prefab);
+  this.updateScreenshotAtIndex(index);
+  this.prefabIndex = index;
+  this.prefabsBar.highlight(index);
   this.updatePropertyPanel();
 };
 
 Editor.prototype.removeSelected = function() {
   this.prefabs.splice(this.prefabIndex, 1);
 
-  this.updateScreenshots();
+  if (this.prefabs.length === 0) {
+    this.blocks.clear();
+    this.prefabs.push(this.blocks.serialize());
+    this.updatePropertyPanel();
+  }
 
   if (this.prefabIndex > this.prefabs.length - 1) {
     this.prefabIndex = this.prefabs.length - 1;
     this.prefabsBar.highlight(this.prefabIndex);
+    this.blocks.deserialize(this.prefabs[this.prefabIndex]);
     this.updatePropertyPanel();
   }
 
-  if (this.prefabIndex >= 0) {
-    this.blocks.deserialize(this.prefabs[this.prefabIndex]);
-  } else {
-    this.blocks.clear();
-  }
+  this.updateScreenshots();
 };
 
 Editor.prototype.createClone = function() {
   var prefab = this.blocks.serialize();
-  this.prefabs.push(prefab);
-  this.updateScreenshotAtIndex(this.prefabs.length - 1);
-  this.prefabsBar.highlight(this.prefabs.length - 1);
+  this.createNew(this.prefabIndex + 1);
+  this.blocks.deserialize(prefab);
+  this.updateCurrentPrefab();
+
+  this.updateScreenshots();
 };
 
 Editor.prototype.screenshot = function(data) {

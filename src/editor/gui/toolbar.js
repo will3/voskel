@@ -1,26 +1,31 @@
-var cpr = require('../../cpr/cpr');
+var cpr = require('./cpr');
 var EditorTools = require('../editortools');
 
 module.exports = function(editor) {
   var bar = cpr({
     data: [{
-      src: '/images/plus.png',
+      src: '/images/icons/plus_light.png',
+      srcActive: '/images/icons/plus_dark.png',
       toolname: EditorTools.Pen,
       tooltip: 'pen tool (1)'
     }, {
-      src: '/images/sampler.png',
+      src: '/images/icons/sampler_light.png',
+      srcActive: '/images/icons/sampler_dark.png',
       toolname: EditorTools.Sample,
       tooltip: 'sample tool (2)'
     }, {
-      src: '/images/lasso.png',
+      src: '/images/icons/lasso_light.png',
+      srcActive: '/images/icons/lasso_dark.png',
       toolname: EditorTools.Select,
       tooltip: 'lasso tool (3)'
     }, {
-      src: '/images/camera.png',
+      src: '/images/icons/camera_light.png',
+      srcActive: '/images/icons/camera_dark.png',
       toolname: EditorTools.Camera,
       tooltip: 'camera tool (4 or drag empty space)'
     }, {
-      src: '/images/fill.png',
+      src: '/images/icons/fill_light.png',
+      srcActive: '/images/icons/fill_dark.png',
       toolname: EditorTools.Fill
     }],
     blockWidth: 32,
@@ -31,7 +36,9 @@ module.exports = function(editor) {
     },
     customPlacement: true,
     showTooltip: true,
-    hideHighlight: true
+    hideHighlight: true,
+    isButton: true,
+    stickySelection: true
   });
 
   var gui = document.getElementById('gui');

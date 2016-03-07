@@ -1,15 +1,22 @@
-var cpr = require('../../cpr/cpr');
+var cpr = require('./cpr');
 
 module.exports = function(editor) {
+  var input = editor.input;
   var data = [{
     button: 'plus',
-    src: '/images/plus.png'
+    src: '/images/icons/plus_light.png',
+    srcActive: '/images/icons/plus_dark.png',
+    tooltip: 'Create new'
   }, {
     button: 'minus',
-    src: '/images/minus.png'
+    src: '/images/icons/minus_light.png',
+    srcActive: '/images/icons/minus_dark.png',
+    tooltip: 'Remove selected'
   }, {
     button: 'clone',
-    src: '/images/clone.png'
+    src: '/images/icons/clone_light.png',
+    srcActive: '/images/icons/clone_dark.png',
+    tooltip: 'Clone selected'
   }];
 
   var bar = cpr({
@@ -28,7 +35,8 @@ module.exports = function(editor) {
         editor.createClone();
       }
     },
-    customPlacement: true
+    customPlacement: true,
+    isButton: true
   });
 
   var gui = document.getElementById('gui');

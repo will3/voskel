@@ -1,15 +1,21 @@
-module.exports = function(data) {
+module.exports = function(data, opts) {
+  var customPlacement = opts.customPlacement || false;
+
   var container = document.createElement('div');
 
   container.className = 'panel';
 
-  container.style.position = 'absolute';
-  container.style.right = 40 + 'px';
-  container.style.top = 20 + 'px';
-  container.style.width = 200 + 'px';
+  if (!customPlacement) {
+    container.style.position = 'absolute';
+    container.style.right = 40 + 'px';
+    container.style.top = 20 + 'px';
+    container.style.width = 200 + 'px';
+    document.body.appendChild(container);
+  }
 
   var panel = {};
   panel.controllers = {};
+  panel.domElement = container;
 
   var controllers = {
     'checkList': checkListController
@@ -24,8 +30,6 @@ module.exports = function(data) {
 
     container.appendChild(controller.element);
   }
-
-  document.body.appendChild(container);
 
   return panel;
 };
@@ -46,6 +50,7 @@ var valueController = function(item) {
   var input = document.createElement('input');
   input.type = 'text';
   input.value = item.value;
+  input.className = 'text-field';
 
   section.appendChild(input);
 
@@ -103,11 +108,8 @@ var checkListController = function(item) {
   var onClick = function(index) {
     return function() {
       var button = buttons[index];
-      if (button.className === 'selected') {
-        button.className = '';
-      } else {
-        button.className = 'selected';
-      }
+
+      button.classList.toggle('selected');
 
       onChange(getSelectedOptions());
     };
@@ -116,7 +118,7 @@ var checkListController = function(item) {
   function getSelectedOptions() {
     var selection = [];
     for (var i = 0; i < buttons.length; i++) {
-      if (buttons[i].className === 'selected') {
+      if (buttons[i].classList.contains('selected')) {
         selection.push(options[i]);
       }
     }
@@ -127,6 +129,7 @@ var checkListController = function(item) {
   for (var i = 0; i < options.length; i++) {
     var option = options[i];
     var button = document.createElement('button');
+    button.className = 'segmented-button';
     button.innerHTML = option;
     section.appendChild(button);
 

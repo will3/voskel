@@ -1,4 +1,4 @@
-var panel = require('../panel/panel');
+var panel = require('./panel');
 
 module.exports = function(editor) {
   var data = [{
@@ -39,5 +39,15 @@ module.exports = function(editor) {
     }
   }];
 
-  return panel(data);
+  var propertyPanel = panel(data, {
+    customPlacement: true
+  });
+
+  propertyPanel.domElement.style.position = 'absolute';
+  propertyPanel.domElement.style.right = 40 + 'px';
+  propertyPanel.domElement.style.top = 20 + 'px';
+  propertyPanel.domElement.style.width = 200 + 'px';
+  document.getElementById('gui').appendChild(propertyPanel.domElement);
+
+  return propertyPanel;
 };

@@ -1,28 +1,34 @@
-var cpr = require('../../cpr/cpr');
+var cpr = require('./cpr');
 
 module.exports = function(editor) {
   var data = [{
-    src: '/images/arrow1.png',
+    src: '/images/icons/arrow1_light.png',
+    srcActive: '/images/icons/arrow1_dark.png',
     index: 0,
     tooltip: 'move right (D)'
   }, {
-    src: '/images/arrow2.png',
+    src: '/images/icons/arrow2_light.png',
+    srcActive: '/images/icons/arrow2_dark.png',
     index: 1,
     tooltip: 'move left (A)'
   }, {
-    src: '/images/arrow3.png',
+    src: '/images/icons/arrow3_light.png',
+    srcActive: '/images/icons/arrow3_dark.png',
     index: 2,
     tooltip: 'move front (W)'
   }, {
-    src: '/images/arrow4.png',
+    src: '/images/icons/arrow4_light.png',
+    srcActive: '/images/icons/arrow4_dark.png',
     index: 3,
     tooltip: 'move back (S)'
   }, {
-    src: '/images/arrow5.png',
+    src: '/images/icons/arrow5_light.png',
+    srcActive: '/images/icons/arrow5_dark.png',
     index: 4,
     tooltip: 'move up (R)'
   }, {
-    src: '/images/arrow6.png',
+    src: '/images/icons/arrow6_light.png',
+    srcActive: '/images/icons/arrow6_dark.png',
     index: 5,
     tooltip: 'move down (F)'
   }];
@@ -53,7 +59,8 @@ module.exports = function(editor) {
       }
 
       editor.applyOffset(offset);
-    }
+    },
+    isButton: true
   });
 
   var gui = document.getElementById('gui');
@@ -61,6 +68,6 @@ module.exports = function(editor) {
 
   bar.domElement.classList.add('toolbar');
   bar.domElement.style.position = 'absolute';
-  bar.domElement.style.top = '80px';
+  bar.domElement.style.top = '70px';
   bar.domElement.style.left = '20px';
 };

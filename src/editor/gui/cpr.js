@@ -5,17 +5,24 @@ module.exports = function(opts) {
   var onHover = opts.onHover || function() {};
   var onLeave = opts.onLeave || function() {};
   var customPlacement = opts.customPlacement || false;
-  var hideHighlight = opts.hideHighlight || false;
   var showTooltip = opts.showTooltip || false;
   var paddingRight = opts.paddingRight || 0;
-
   var blockWidth = opts.blockWidth || 20;
   var blockHeight = opts.blockHeight || 20;
   var columns = opts.columns || 14;
-  var disableHighlight = opts.disableHighlight || false;
+  var isButton = opts.isButton || false;
+  var skinBlock = opts.skinBlock || function() {};
+  var stickySelection = opts.stickySelection || false;
 
   var container = document.createElement('div');
   container.className = 'cpr';
+
+  var mousedownListeners = [];
+  var mouseupListeners = [];
+  var blocks = [];
+  var data = [];
+  var highlightDiv = null;
+  var selectedIndex = -1;
 
   if (showTooltip) {
     var tooltip = document.createElement('div');
@@ -36,9 +43,6 @@ module.exports = function(opts) {
   container.onfocus = function() {
     container.style['outline'] = 'none';
   };
-
-  var blocks = [];
-  var data = [];
 
   for (var i = 0; i < dataToLoad.length; i++) {
     add(dataToLoad[i]);
@@ -64,6 +68,11 @@ module.exports = function(opts) {
 
   function remove(index) {
     container.removeChild(blocks[index]);
+    blocks[index].removeEventListener('mousedown', mousedownListeners[index]);
+    blocks[index].removeEventListener('mouseup', mouseupListeners[index]);
+
+    mousedownListeners[index] = undefined;
+    mouseupListeners[index] = undefined;
     blocks[index] = undefined;
     data[index] = undefined;
   };
@@ -89,7 +98,11 @@ module.exports = function(opts) {
       element.style.backgroundColor = color;
     }
 
-    element.className = 'block';
+    element.className = 'block box-sizing';
+    if (isButton) {
+      element.classList.add('button');
+    }
+
     container.appendChild(element);
     position(element, row, column);
 
@@ -98,9 +111,25 @@ module.exports = function(opts) {
 
     updateContainer();
 
-    if (selectedIndex == -1) {
-      highlight(0);
-    }
+    skinBlock(element);
+
+    var onMouseDown = function(e) {
+      highlight(index, true);
+      onPick(obj, index);
+    };
+
+    var onMouseUp = function(e) {
+      if (isButton && !stickySelection) {
+        highlight(index, false);
+      } 
+    };
+
+    element.addEventListener('mousedown', onMouseDown);
+
+    element.addEventListener('mouseup', onMouseUp);
+
+    mousedownListeners[index] = onMouseDown;
+    mouseupListeners[index] = onMouseUp;
   };
 
   function add(obj) {
@@ -122,30 +151,49 @@ module.exports = function(opts) {
     container.style.height = getRows() * blockHeight + 'px';
   };
 
-  var highlightDiv = null;
-  var selectedIndex = -1;
+  function highlight(index, value) {
+    value = value === undefined ? true : value;
 
-  function highlight(index) {
-    if (disableHighlight) {
+    var element = blocks[index];
+
+    if (element == null) {
       return;
     }
 
-    selectedIndex = index;
-    var row = getRow(index);
-    var column = getColumn(index);
+    var obj = data[index];
 
-    if (!hideHighlight) {
-      if (highlightDiv == null) {
-        highlightDiv = document.createElement('div');
-        highlightDiv.className = 'highlight';
-        highlightDiv.style.position = 'absolute';
-        highlightDiv.style.width = blockWidth + 'px';
-        highlightDiv.style.height = blockHeight + 'px';
-        container.appendChild(highlightDiv);
+    if (value) {
+      if (isButton) {
+        // un highlight last element if sticky selection
+        if (stickySelection && selectedIndex != index) {
+          highlight(selectedIndex, false);
+        }
+
+        element.classList.add('selected');
+        if (obj.srcActive != null) element.src = obj.srcActive;
+      } else {
+        var row = getRow(index);
+        var column = getColumn(index);
+        if (highlightDiv == null) {
+          highlightDiv = document.createElement('div');
+          highlightDiv.className = 'highlight';
+          highlightDiv.style.position = 'absolute';
+          highlightDiv.style.width = blockWidth + 'px';
+          highlightDiv.style.height = blockHeight + 'px';
+          highlightDiv.style.zIndex = 1;
+          container.appendChild(highlightDiv);
+        }
+
+        highlightDiv.style.left = column * (blockWidth + paddingRight) - 1 + 'px';
+        highlightDiv.style.top = row * blockHeight - 1 + 'px';
       }
 
-      highlightDiv.style.left = column * (blockWidth + paddingRight) - 1 + 'px';
-      highlightDiv.style.top = row * blockHeight - 1 + 'px';
+      selectedIndex = index;
+    } else {
+      if (isButton) {
+        element.classList.remove('selected');
+        element.src = obj.src;
+      }
     }
   };
 
@@ -172,22 +220,6 @@ module.exports = function(opts) {
     return false;
   }
 
-  container.addEventListener('mousedown', function(e) {
-    var mouseX = e.pageX - container.offsetLeft;
-    var mouseY = e.pageY - container.offsetTop;
-    var row = Math.floor(mouseY / blockHeight);
-    var column = Math.floor(mouseX / (blockWidth + paddingRight));
-    var index = getIndex(row, column);
-
-    if (data[index] == null) {
-      return;
-    }
-
-    var obj = data[index];
-    highlight(index);
-    onPick(obj, index);
-  });
-
   var mouse = null;
   container.addEventListener('mousemove', function(e) {
     mouse = e;
@@ -206,8 +238,8 @@ module.exports = function(opts) {
 
     if (showTooltip && obj.tooltip != null) {
       tooltip.style.visibility = 'visible';
-      tooltip.style.left = mouseX + 'px';
-      tooltip.style.top = mouseY + 'px';
+      tooltip.style.left = mouseX + 2 + 'px';
+      tooltip.style.top = mouseY + 2 + 'px';
       if (tooltip.innerHTML !== obj.tooltip) {
         tooltip.innerHTML = obj.tooltip;
       }
@@ -223,10 +255,6 @@ module.exports = function(opts) {
       }
     }
   });
-
-  if (data.length > 0) {
-    highlight(0);
-  }
 
   return {
     highlight: highlight,

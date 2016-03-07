@@ -25,7 +25,6 @@ function loadBasicMaterial(source) {
 };
 
 materials = {
-  '1': loadLambertMaterial('images/1.png'),
   'placeholder': loadBasicMaterial('images/placeholder.png')
 }
 

@@ -1,10 +1,11 @@
-var cpr = require('../../cpr/cpr');
+var cpr = require('./cpr');
 var popup = require('./popup');
 
 module.exports = function(editor) {
   // download.png
   var data = [{
-    src: '/images/download.png',
+    src: '/images/icons/download_light.png',
+    srcActive: '/images/icons/download_dark.png',
     button: 'download'
   }];
 
@@ -20,7 +21,8 @@ module.exports = function(editor) {
       if (button === 'download') {
         editor.downloadJSON(editor.serialize(), 'blocks');
       }
-    }
+    },
+    isButton: true
   });
 
   var gui = document.getElementById('gui');
@@ -30,5 +32,5 @@ module.exports = function(editor) {
 
   bar.domElement.style.position = 'absolute';
   bar.domElement.style.left = 20 + 'px';
-  bar.domElement.style.top = 140 + 'px';
+  bar.domElement.style.top = 120 + 'px';
 };

@@ -1,4 +1,4 @@
-var cpr = require('../../cpr/cpr');
+var cpr = require('./cpr');
 
 module.exports = function(editor) {
   var bar = cpr({

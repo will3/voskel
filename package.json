@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha src/test --recursive --watch",
-    "build": "watchify src/main.js -o js/bundle.js --verbose --debug"
+    "build": "watchify src/main.js -o js/bundle.js --verbose --debug",
+    "publish": "browserify src/main.js | uglifyjs -c > js/bundle.js"
   },
   "author": "",
   "license": "ISC",

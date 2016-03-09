@@ -6,7 +6,7 @@ module.exports = function(editor) {
   var data = [{
     src: '/images/icons/download_light.png',
     srcActive: '/images/icons/download_dark.png',
-    button: 'download'
+    button: 'save'
   }];
 
   var bar = cpr({
@@ -18,9 +18,12 @@ module.exports = function(editor) {
     onPick: function(obj) {
       var button = obj.button;
 
-      if (button === 'download') {
-        editor.downloadJSON(editor.serialize(), 'blocks');
+      if(button === 'save') {
+        editor.save();
       }
+      // if (button === 'download') {
+      //   editor.downloadJSON(editor.serialize(), 'blocks');
+      // }
     },
     isButton: true
   });

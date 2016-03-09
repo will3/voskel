@@ -4,6 +4,9 @@ module.exports = function(grunt) {
       build: {
         command: 'npm run build'
       },
+      publish: {
+        command: 'npm run publish'
+      },
       open: {
         command: 'open http://localhost:9000/index.html'
       }
@@ -24,4 +27,5 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-concurrent');
 
   grunt.registerTask('default', ['concurrent:dev']);
+  grunt.registerTask('publish', ['shell:publish', 'shell:open', 'serve']);
 };

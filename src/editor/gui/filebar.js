@@ -4,6 +4,14 @@ var popup = require('./popup');
 module.exports = function(editor) {
   // download.png
   var data = [{
+    src: '/images/icons/undo_light.png',
+    srcActive: '/images/icons/undo_dark.png',
+    button: 'undo'
+  },{
+    src: '/images/icons/redo_light.png',
+    srcActive: '/images/icons/redo_dark.png',
+    button: 'redo'
+  },{
     src: '/images/icons/download_light.png',
     srcActive: '/images/icons/download_dark.png',
     button: 'save'
@@ -20,6 +28,10 @@ module.exports = function(editor) {
 
       if(button === 'save') {
         editor.save();
+      }else if(button === 'undo') {
+        editor.undo();
+      }else if(button === 'redo') {
+        editor.redo();
       }
       // if (button === 'download') {
       //   editor.downloadJSON(editor.serialize(), 'blocks');

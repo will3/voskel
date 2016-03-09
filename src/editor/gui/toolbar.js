@@ -4,8 +4,8 @@ var EditorTools = require('../editortools');
 module.exports = function(editor) {
   var bar = cpr({
     data: [{
-      src: '/images/icons/plus_light.png',
-      srcActive: '/images/icons/plus_dark.png',
+      src: '/images/icons/pencil_light.png',
+      srcActive: '/images/icons/pencil_dark.png',
       toolname: EditorTools.Pen,
       tooltip: 'pen tool (1)'
     }, {

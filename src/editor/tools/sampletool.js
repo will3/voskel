@@ -21,8 +21,6 @@ SampleTool.prototype.tick = function() {
     } else {
       this.editor.setSelectedColor(null);
     }
-
-    // this.editor.setTool(EditorTools.Pen);
   }
 };
 

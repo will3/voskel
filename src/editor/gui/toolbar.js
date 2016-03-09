@@ -26,7 +26,8 @@ module.exports = function(editor) {
     }, {
       src: '/images/icons/fill_light.png',
       srcActive: '/images/icons/fill_dark.png',
-      toolname: EditorTools.Fill
+      toolname: EditorTools.Fill,
+      tooltip: 'block tool (5) (drag and drop between two points)'
     }],
     blockWidth: 32,
     blockHeight: 32,

@@ -241,6 +241,8 @@ Editor.prototype.tick = function() {
     this.setTool(this.toolNames[2]);
   } else if (this.input.keyDown('4')) {
     this.setTool(this.toolNames[3]);
+  } else if (this.input.keyDown('5')) {
+    this.setTool(this.toolNames[4]);
   }
 };
 
@@ -396,6 +398,10 @@ Editor.prototype.updateTool = function() {
   } else {
     throw new Error('cannot make tool named: ' + this.toolName);
   }
+
+  if (this.tool.start != null) {
+    this.tool.start();
+  }
 };
 
 Editor.prototype.drawSelection = function() {
@@ -424,6 +430,7 @@ Editor.prototype.createNew = function(index) {
   this.prefabIndex = index;
   this.prefabsBar.highlight(index);
   this.updatePropertyPanel();
+  this.updateLastBlocks();
 };
 
 Editor.prototype.removeSelected = function() {
@@ -443,6 +450,7 @@ Editor.prototype.removeSelected = function() {
   }
 
   this.updateScreenshots();
+  this.updateLastBlocks();
 };
 
 Editor.prototype.createClone = function() {

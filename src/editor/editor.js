@@ -641,6 +641,7 @@ Editor.prototype.applyOffset = function(offset) {
   }
 
   this.runCommand(new OffsetCommand(this, this.blocks, selectedCoords, offset));
+  this.updateLastBlocks();
 };
 
 Editor.prototype.downloadJSON = function(json, name) {

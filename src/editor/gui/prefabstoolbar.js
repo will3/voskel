@@ -1,4 +1,5 @@
 var cpr = require('./cpr');
+var popup = require('./popup');
 
 module.exports = function(editor) {
   var input = editor.input;
@@ -24,13 +25,24 @@ module.exports = function(editor) {
     blockWidth: 32,
     blockHeight: 32,
     disableHighlight: true,
+    showTooltip: true,
     onPick: function(obj) {
       var button = obj.button;
 
       if (button === 'plus') {
         editor.createNew();
       } else if (button === 'minus') {
-        editor.removeSelected();
+        popup.prompt({
+          text: "Are you sure?",
+          buttons: ["Yea", "Na"]
+        }, function(index) {
+          if (index === 0) {
+            editor.removeSelected();
+          }
+        });
+
+        bar.highlight(1, false);
+
       } else if (button === 'clone') {
         editor.createClone();
       }

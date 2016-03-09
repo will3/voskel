@@ -1,5 +1,17 @@
 var panel = require('./panel');
 
+function clamp(value, min, max) {
+  if (value < min) {
+    return min;
+  }
+
+  if (value > max) {
+    return max;
+  }
+
+  return value;
+};
+
 module.exports = function(editor) {
   var data = [{
     title: 'name',
@@ -11,7 +23,7 @@ module.exports = function(editor) {
     title: 'size',
     value: '',
     onFinishEditing: function(value, input) {
-      var reg = /^(\d{1,2}) (\d{1,2}) (\d{1,2})$/g
+      var reg = /^\s*(\d{1,2}) (\d{1,2}) (\d{1,2})\s*$/g
       var matches = reg.exec(value);
 
       if (matches == null) {
@@ -19,7 +31,13 @@ module.exports = function(editor) {
         return;
       }
 
-      editor.updateSize([parseInt(matches[1]), parseInt(matches[2]), parseInt(matches[3])]);
+      editor.updateSize([
+        clamp(parseInt(matches[1]), 0, 32),
+        clamp(parseInt(matches[2]), 0, 32),
+        clamp(parseInt(matches[3]), 0, 32)
+      ]);
+
+      editor.updatePropertyPanel();
     }
   }, {
     title: 'mirror',

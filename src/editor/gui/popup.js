@@ -1,5 +1,10 @@
 module.exports = {
-  prompt: function(text, buttons, callback) {
+  prompt: function(opts, callback) {
+    var text = opts.text;
+    var buttons = opts.buttons || ['OK'];
+    var containerWidth = opts.containerWidth || 200;
+    var containerHeight = opts.containerHeight || 200;
+
     var background = document.createElement('div');
     background.style.backgroundColor = 'rgba(0,0,0,0.8)'
     background.style.position = 'absolute';
@@ -7,13 +12,13 @@ module.exports = {
     background.style.height = '100%';
     document.body.appendChild(background);
 
-    var containerWidth = 200;
-    var containerHeight = 200;
+    containerWidth = 200;
+    containerHeight = 200;
     var container = document.createElement('div');
     container.className = 'prompt';
     container.style.position = 'absolute';
     container.style.width = containerWidth + 'px';
-    container.style.height = containerHeight + 'px';
+    // container.style.height = containerHeight + 'px';
 
     background.appendChild(container);
 
@@ -30,20 +35,22 @@ module.exports = {
     question.style.fontFamily = ''
     container.appendChild(question);
 
-    var input = document.createElement('input');
-    input.type = 'text';
-    container.appendChild(input);
+    // var input = document.createElement('input');
+    // input.type = 'text';
+    // container.appendChild(input);
 
-    container.appendChild(document.createElement('br'));
+    // container.appendChild(document.createElement('br'));
+
+    // input.focus();
 
     function onClick(index) {
       return function() {
-        var valid = callback(input.value, index);
-        if (valid === undefined) {
-          valid = true;
+        var shouldDismiss = callback(index);
+        if (shouldDismiss === undefined) {
+          shouldDismiss = true;
         }
 
-        if (valid) {
+        if (shouldDismiss) {
           dismiss();
         }
       }
@@ -66,8 +73,6 @@ module.exports = {
       document.body.removeChild(background);
       window.removeEventListener('resize', onWindowResize);
     }
-
-    input.focus();
 
     var prompt = {
       dismiss: dismiss

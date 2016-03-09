@@ -6,15 +6,18 @@ module.exports = function(editor) {
   var data = [{
     src: '/images/icons/undo_light.png',
     srcActive: '/images/icons/undo_dark.png',
-    button: 'undo'
-  },{
+    button: 'undo',
+    tooltip: 'Undo (ctrl + z)'
+  }, {
     src: '/images/icons/redo_light.png',
     srcActive: '/images/icons/redo_dark.png',
-    button: 'redo'
-  },{
+    button: 'redo',
+    tooltip: 'Redo (shift + ctrl + z)'
+  }, {
     src: '/images/icons/download_light.png',
     srcActive: '/images/icons/download_dark.png',
-    button: 'save'
+    button: 'save',
+    tooltip: 'Save in browser'
   }];
 
   var bar = cpr({
@@ -23,19 +26,17 @@ module.exports = function(editor) {
     blockWidth: 32,
     blockHeight: 32,
     hideHighlight: true,
+    showTooltip: true,
     onPick: function(obj) {
       var button = obj.button;
 
-      if(button === 'save') {
+      if (button === 'save') {
         editor.save();
-      }else if(button === 'undo') {
+      } else if (button === 'undo') {
         editor.undo();
-      }else if(button === 'redo') {
+      } else if (button === 'redo') {
         editor.redo();
       }
-      // if (button === 'download') {
-      //   editor.downloadJSON(editor.serialize(), 'blocks');
-      // }
     },
     isButton: true
   });

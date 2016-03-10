@@ -8,24 +8,23 @@ module.exports = function(grunt) {
         command: 'npm run publish'
       },
       open: {
-        command: 'open http://localhost:9000/index.html'
+        command: 'open http://localhost:3000'
+      },
+      serve: {
+        command: 'nodemon index.js'
       }
     },
-    serve: {
-
-    },
     concurrent: {
-      dev: ['shell:open', 'serve', 'shell:build'],
+      dev: ['shell:open', 'shell:serve', 'shell:build'],
       options: {
         logConcurrentOutput: true
       }
     }
   });
 
-  grunt.loadNpmTasks('grunt-serve');
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-concurrent');
 
   grunt.registerTask('default', ['concurrent:dev']);
-  grunt.registerTask('publish', ['shell:publish', 'shell:open', 'serve']);
+  grunt.registerTask('publish', ['shell:publish', 'shell:open', 'shell:serve']);
 };

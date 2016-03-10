@@ -1,4 +1,4 @@
-var Stats = require('stats.js');
+// var Stats = require('stats.js');
 
 module.exports = function(scene, camera, container) {
   var renderer = new THREE.WebGLRenderer();
@@ -14,12 +14,12 @@ module.exports = function(scene, camera, container) {
   var system = {};
   system.renderer = renderer;
 
-  var stats = new Stats();
-  stats.domElement.style.position = 'absolute';
-  stats.domElement.style.right = '0px';
-  stats.domElement.style.bottom = '0px';
+  // var stats = new Stats();
+  // stats.domElement.style.position = 'absolute';
+  // stats.domElement.style.right = '0px';
+  // stats.domElement.style.bottom = '0px';
 
-  document.body.appendChild(stats.domElement);
+  // document.body.appendChild(stats.domElement);
 
   var ssao = true;
 
@@ -32,7 +32,7 @@ module.exports = function(scene, camera, container) {
   function render() {
     requestAnimationFrame(render);
 
-    stats.begin();
+    // stats.begin();
 
     if (ssao) {
       // Render depth into depthRenderTarget
@@ -46,8 +46,7 @@ module.exports = function(scene, camera, container) {
       renderer.render(scene, camera);
     }
 
-
-    stats.end();
+    // stats.end();
   };
 
   function onWindowResize() {

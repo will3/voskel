@@ -1,6 +1,6 @@
 var THREE = require('three');
 var b = require('./core/b');
-var stats = require('./services/stats');
+// var stats = require('./services/stats');
 
 var app = b('main');
 
@@ -31,7 +31,7 @@ app.value('devConsole', devConsole);
 var prefabService = require('./services/prefabservice')();
 app.value('prefabService', prefabService);
 
-stats(app);
+// stats(app);
 
 // Attach camera control
 function loadGame() {

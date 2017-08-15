@@ -32,8 +32,7 @@ module.exports = function(editor) {
     blockWidth: 32,
     blockHeight: 32,
     onPick: function(obj) {
-      editor.toolName = obj.toolname;
-      editor.updateTool();
+      editor.setTool(obj.toolname);
     },
     customPlacement: true,
     showTooltip: true,

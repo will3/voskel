@@ -17,9 +17,10 @@ SampleTool.prototype.tick = function() {
       var index = this.blocks.getAtCoord(coord);
       var color = this.blocks.palette[index];
       this.editor.setSelectedColor(color);
-
+      this.editor.setLastTool();
     } else {
       this.editor.setSelectedColor(null);
+      this.editor.setLastTool();
     }
   }
 };

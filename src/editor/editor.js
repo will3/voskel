@@ -23,7 +23,10 @@ var SelectTool = require('./tools/selecttool');
 var CameraTool = require('./tools/cameratool');
 var FillTool = require('./tools/filltool');
 
-var Editor = function(object, app, input, camera, devConsole, config, palette, canvas, prefabService) {
+var VERSION = '1.0';
+var KEY_SAVE = 'save';
+
+var Editor = function(object, app, input, camera, devConsole, config, palette, canvas, cache) {
 
   this.object = object;
 
@@ -41,7 +44,7 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
 
   this.canvas = canvas;
 
-  this.prefabService = prefabService;
+  this.cache = cache;
 
   this.context = this.canvas.getContext('2d');
 
@@ -78,6 +81,7 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
   this.toolNames = [EditorTools.Pen, EditorTools.Sample, EditorTools.Select, EditorTools.Camera, EditorTools.Fill];
 
   this.toolName = EditorTools.Pen;
+  this.lastTool = this.toolName;
 
   this.tool = null;
 
@@ -112,14 +116,23 @@ var Editor = function(object, app, input, camera, devConsole, config, palette, c
   this.propertyPanel = null;
 
   this.prefabIndex = 0;
+
+  this.lastTool = null;
 };
 
-Editor.$inject = ['app', 'input', 'camera', 'devConsole', 'config', 'palette', 'canvas', 'prefabService'];
+Editor.$inject = ['app', 'input', 'camera', 'devConsole', 'config', 'palette', 'canvas', 'cache'];
 
 Editor.prototype.start = function() {
   editorConsole(this, this.devConsole);
 
-  this.prefabs = this.prefabService.load();
+  var save = this.cache.get(KEY_SAVE);
+  if (save != null) {
+    if (save.version !== VERSION) {
+      // Migrate
+    } else {
+      this.prefabs = save.prefabs || [];  
+    }
+  }
 
   this.blocks = this.app.attach(this.object, blocksComponent);
 
@@ -150,6 +163,7 @@ Editor.prototype.start = function() {
   this.colorBar.highlight(0);
   this.prefabsBar.highlight(0);
   this.toolBar.highlight(0);
+
 };
 
 Editor.prototype.setTool = function(name) {
@@ -159,6 +173,7 @@ Editor.prototype.setTool = function(name) {
   }
 
   this.toolBar.highlight(index);
+  this.lastTool = this.toolName;
   this.toolName = name;
   this.updateTool();
 };
@@ -274,6 +289,7 @@ Editor.prototype.runCommand = function(command) {
   this.undos.push(command);
   this.redos = CBuffer(200);
   this.updateCurrentScreenshot();
+  this.save();
 };
 
 Editor.prototype.updateCurrentScreenshot = function() {
@@ -534,12 +550,13 @@ Editor.prototype.updatePropertyPanel = function() {
   this.propertyPanel.controllers['size'].setValue(formattedSize);
 };
 
-Editor.prototype.reset = function() {
-  this.prefabService.reset();
-};
-
 Editor.prototype.save = function() {
-  this.prefabService.save(this.prefabs);
+  var save = {
+    version: VERSION,
+    prefabs: this.prefabs
+  };
+
+  this.cache.set(KEY_SAVE, save);
 };
 
 Editor.prototype.updateLastBlocks = function() {
@@ -648,6 +665,7 @@ Editor.prototype.applyOffset = function(offset) {
 Editor.prototype.downloadJSON = function() {
   var json = this.serialize();
   var name = this.getSelectedPrefab().userData.name;
+
   var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(json));
   if (this.downloadElement == null) {
     this.downloadElement = document.createElement('a');
@@ -660,7 +678,12 @@ Editor.prototype.downloadJSON = function() {
 };
 
 Editor.prototype.serialize = function() {
-  return this.blocks.serialize();
+  var data = {
+    version: VERSION,
+    blocks: this.blocks.serialize()
+  };
+
+  return data;
 };
 
 Editor.prototype.getSelectedPrefab = function() {
@@ -669,6 +692,10 @@ Editor.prototype.getSelectedPrefab = function() {
 
 Editor.prototype.updateCurrentPrefab = function() {
   this.prefabs[this.prefabIndex] = this.blocks.serialize();
+};
+
+Editor.prototype.setLastTool = function() {
+  this.setTool(this.lastTool);
 };
 
 module.exports = Editor;

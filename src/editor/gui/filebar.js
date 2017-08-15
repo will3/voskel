@@ -17,7 +17,7 @@ module.exports = function(editor) {
     src: '/images/icons/download_light.png',
     srcActive: '/images/icons/download_dark.png',
     button: 'save',
-    tooltip: 'Save in browser'
+    tooltip: 'Save'
   }];
 
   var bar = cpr({
@@ -31,7 +31,7 @@ module.exports = function(editor) {
       var button = obj.button;
 
       if (button === 'save') {
-        editor.save();
+        editor.downloadJSON();
       } else if (button === 'undo') {
         editor.undo();
       } else if (button === 'redo') {

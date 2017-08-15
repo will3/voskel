@@ -1,5 +1,6 @@
 var THREE = require('three');
 var CBuffer = require('cbuffer');
+
 var blocksComponent = require('../components/blocks');
 var dragCameraComponent = require('./dragcamera');
 var editorConsole = require('./editorconsole');
@@ -644,8 +645,9 @@ Editor.prototype.applyOffset = function(offset) {
   this.updateLastBlocks();
 };
 
-Editor.prototype.downloadJSON = function(json, name) {
-  name = name || 'blocks';
+Editor.prototype.downloadJSON = function() {
+  var json = this.serialize();
+  var name = this.getSelectedPrefab().userData.name;
   var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(json));
   if (this.downloadElement == null) {
     this.downloadElement = document.createElement('a');

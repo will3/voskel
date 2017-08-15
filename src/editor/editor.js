@@ -125,12 +125,15 @@ Editor.$inject = ['app', 'input', 'camera', 'devConsole', 'config', 'palette', '
 Editor.prototype.start = function() {
   editorConsole(this, this.devConsole);
 
+  this.selectedColor = this.palette[0];
+
   var save = this.cache.get(KEY_SAVE);
   if (save != null) {
     if (save.version !== VERSION) {
       // Migrate
     } else {
       this.prefabs = save.prefabs || [];  
+      this.selectedColor = save.selectedColor;
     }
   }
 
@@ -141,8 +144,6 @@ Editor.prototype.start = function() {
   this.updateTool();
 
   this.updateMaterial(this.blocks);
-
-  this.selectedColor = this.palette[0];
 
   // Set up GUI
   this.toolBar = toolBar(this);
@@ -160,10 +161,19 @@ Editor.prototype.start = function() {
   this.load(this.prefabs[0]);
   this.updateScreenshots();
 
-  this.colorBar.highlight(0);
+  this.setSelectedColor(this.selectedColor);
   this.prefabsBar.highlight(0);
   this.toolBar.highlight(0);
+};
 
+Editor.prototype.load = function(data) {
+  this.blocks.deserialize(data);
+
+  this.updateSize(this.blocks.dim);
+
+  this.updateLastBlocks();
+
+  this.updatePropertyPanel();
 };
 
 Editor.prototype.setTool = function(name) {
@@ -530,16 +540,6 @@ Editor.prototype.screenshot = function(data) {
   return imgData;
 };
 
-Editor.prototype.load = function(data) {
-  this.blocks.deserialize(data);
-
-  this.updateSize(this.blocks.dim);
-
-  this.updateLastBlocks();
-
-  this.updatePropertyPanel();
-};
-
 Editor.prototype.updatePropertyPanel = function() {
   var prefab = this.getSelectedPrefab();
 
@@ -553,10 +553,13 @@ Editor.prototype.updatePropertyPanel = function() {
 Editor.prototype.save = function() {
   var save = {
     version: VERSION,
-    prefabs: this.prefabs
+    prefabs: this.prefabs,
+    selectedColor: this.selectedColor
   };
 
   this.cache.set(KEY_SAVE, save);
+
+  return save;
 };
 
 Editor.prototype.updateLastBlocks = function() {
@@ -663,7 +666,8 @@ Editor.prototype.applyOffset = function(offset) {
 };
 
 Editor.prototype.downloadJSON = function() {
-  var json = this.serialize();
+  var json = this.save();
+
   var name = this.getSelectedPrefab().userData.name;
 
   var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(json));
@@ -675,15 +679,6 @@ Editor.prototype.downloadJSON = function() {
   this.downloadElement.setAttribute("href", dataStr);
   this.downloadElement.setAttribute("download", name + '.json');
   this.downloadElement.click();
-};
-
-Editor.prototype.serialize = function() {
-  var data = {
-    version: VERSION,
-    blocks: this.blocks.serialize()
-  };
-
-  return data;
 };
 
 Editor.prototype.getSelectedPrefab = function() {

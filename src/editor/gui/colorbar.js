@@ -5,6 +5,7 @@ module.exports = function(editor) {
     data: editor.palette,
     onPick: function(color) {
       editor.selectedColor = color.isClearColor ? null : color;
+      editor.save();
     },
     customPlacement: true
   });

@@ -155,6 +155,7 @@ Blocks.prototype._updateMesh = function() {
     var f = surface.face;
     var uv = surface.uv;
     var c = f[4];
+    c = c.value || c;
 
     var face = new THREE.Face3(f[0], f[1], f[2]);
     geometry.faces.push(face);

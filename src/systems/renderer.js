@@ -21,7 +21,7 @@ module.exports = function(scene, camera, container) {
 
   // document.body.appendChild(stats.domElement);
 
-  var ssao = true;
+  var ssao = false;
 
   var ambient = new THREE.AmbientLight(new THREE.Color("rgb(60%, 60%, 60%)"));
   var light = new THREE.DirectionalLight(0xffffff, 0.6);

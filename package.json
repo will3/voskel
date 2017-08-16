@@ -41,6 +41,7 @@
     "greedy-mesher": "^1.0.3",
     "jsondiffpatch": "^0.1.38",
     "keycode": "^2.1.0",
+    "lodash": "^4.17.4",
     "minimist": "^1.2.0",
     "mousetrap": "^1.6.1",
     "ndarray": "^1.0.18",

@@ -1,5 +1,6 @@
 var THREE = require('three');
 var CBuffer = require('cbuffer');
+var _ = require('lodash');
 
 var blocksComponent = require('../components/blocks');
 var dragCameraComponent = require('./dragcamera');
@@ -127,23 +128,9 @@ Editor.prototype.start = function() {
   editorConsole(this, this.devConsole);
 
   this.selectedColor = this.palette[0];
-
-  var save = this.cache.get(KEY_SAVE);
-  if (save != null) {
-    if (save.version !== VERSION) {
-      // Migrate
-    } else {
-      this.prefabs = save.prefabs || [];  
-      this.selectedColor = save.selectedColor;
-    }
-  }
-
   this.blocks = this.app.attach(this.object, blocksComponent);
-
   this.dragCamera = this.app.attach(this.camera, dragCameraComponent);
-
   this.updateTool();
-
   this.updateMaterial(this.blocks);
 
   // Set up GUI
@@ -155,11 +142,11 @@ Editor.prototype.start = function() {
   this.prefabsToolbar = prefabsToolBar(this);
   this.propertyPanel = propertyPanel(this);
 
-  if (this.prefabs.length === 0) {
-    this.prefabs.push(this.blocks.serialize());
+  var save = this.cache.get(KEY_SAVE);
+  if (save != null) {
+    this.deserialize(save);
   }
 
-  this.load(this.prefabs[0]);
   this.updateScreenshots();
 
   this.setSelectedColor(this.selectedColor);
@@ -168,6 +155,10 @@ Editor.prototype.start = function() {
 
   Mousetrap.bind(['command+z', 'ctrl+z'], this.undo.bind(this));
   Mousetrap.bind(['command+shift+z', 'ctrl+shift+z'], this.redo.bind(this));
+
+  if (this.prefabs.length === 0) {
+    this.prefabs.push(this.blocks.serialize());
+  }
 };
 
 Editor.prototype.load = function(data) {
@@ -262,33 +253,40 @@ Editor.prototype.tick = function() {
 };
 
 Editor.prototype.undo = function() {
-  var command = this.undos.last();
-  if (command == null) {
+  var lastState = this.undos.last();
+  if (lastState == null) {
     return;
   }
-  command.undo();
+  this.redos.push(this.serialize());
+  this.deserialize(lastState);
   this.undos.pop();
-  this.redos.push(command);
   this.updateCurrentScreenshot();
 };
 
 Editor.prototype.redo = function() {
-  var command = this.redos.last();
-  if (command == null) {
+  var lastState = this.redos.last();
+  if (lastState == null) {
     return;
   }
-  command.run();
+  this.undos.push(this.serialize());
+  this.deserialize(lastState);
   this.redos.pop();
-  this.undos.push(command);
   this.updateCurrentScreenshot();
 };
 
-Editor.prototype.runCommand = function(command) {
+Editor.prototype.runCommand = function(command, skipSave) {
+  skipSave = skipSave || false;
+  if (!skipSave) {
+    this.saveUndoState();
+  }
   command.run();
-  this.undos.push(command);
   this.redos = CBuffer(200);
   this.updateCurrentScreenshot();
   this.save();
+};
+
+Editor.prototype.saveUndoState = function() {
+  this.undos.push(_.cloneDeep(this.serialize()));  
 };
 
 Editor.prototype.updateCurrentScreenshot = function() {
@@ -540,16 +538,26 @@ Editor.prototype.updatePropertyPanel = function() {
 };
 
 Editor.prototype.save = function() {
-  var save = {
+  this.cache.set(KEY_SAVE, this.serialize());
+};
+
+Editor.prototype.serialize = function() {
+  return {
     version: VERSION,
     prefabs: this.prefabs,
     selectedColor: this.selectedColor
   };
-
-  this.cache.set(KEY_SAVE, save);
-
-  return save;
 };
+
+Editor.prototype.deserialize = function(save) {
+  if (save.version !== VERSION) {
+    // Migrate
+  } else {
+    this.prefabs = save.prefabs || [];  
+    this.selectedColor = save.selectedColor;
+    this.load(this.prefabs[0]);
+  }
+}
 
 Editor.prototype.updateLastBlocks = function() {
   this.blocks.updateMesh();
@@ -655,7 +663,7 @@ Editor.prototype.applyOffset = function(offset) {
 };
 
 Editor.prototype.downloadJSON = function() {
-  var json = this.save();
+  var json = this.serialize();
 
   var name = this.getSelectedPrefab().userData.name;
 

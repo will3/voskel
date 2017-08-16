@@ -33,8 +33,10 @@ PenTool.prototype.tick = function() {
   }
 
   if (this.input.mouseDown(0)) {
+    this.editor.saveUndoState();
     this.onClick(isClearColor);
   } else if (this.input.mouseDown(2)) {
+    this.editor.saveUndoState();
     this.onClick(true);
   }
 
@@ -58,7 +60,9 @@ PenTool.prototype.onClick = function(isClear) {
   if (!!coord) {
     if (this.blocks.getAtCoord(coord) !== selectedIndex) {
       this.editor.updateLastBlocks();
-      this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords([coord]), selectedIndex));
+      this.editor.runCommand(
+        new SetCommand(this.blocks, this.reflectCoords([coord]), selectedIndex),
+        true);
     }
   }
 };
@@ -83,7 +87,9 @@ PenTool.prototype.onDrag = function(isClear) {
 
   coords = uniqueCoords(coords);
   if (coords.length > 0) {
-    this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords(coords), selectedIndex));
+    this.editor.runCommand(
+      new SetCommand(this.blocks, this.reflectCoords(coords), selectedIndex),
+      true);
   }
 };
 

@@ -22,6 +22,7 @@ var SampleTool = require('./tools/sampletool');
 var SelectTool = require('./tools/selecttool');
 var CameraTool = require('./tools/cameratool');
 var FillTool = require('./tools/filltool');
+var Mousetrap = require('mousetrap');
 
 var VERSION = '1.0';
 var KEY_SAVE = 'save';
@@ -164,6 +165,9 @@ Editor.prototype.start = function() {
   this.setSelectedColor(this.selectedColor);
   this.prefabsBar.highlight(0);
   this.toolBar.highlight(0);
+
+  Mousetrap.bind(['command+z', 'ctrl+z'], this.undo.bind(this));
+  Mousetrap.bind(['command+shift+z', 'ctrl+shift+z'], this.redo.bind(this));
 };
 
 Editor.prototype.load = function(data) {
@@ -247,16 +251,6 @@ Editor.prototype.tick = function() {
 
   if (offsetCoord != null) {
     this.applyOffset(offsetCoord);
-  }
-
-  if (this.input.keyHold('command') && this.input.keyHold('shift')) {
-    if (this.input.keyDown('z')) {
-      this.redo();
-    }
-  } else if (this.input.keyHold('command')) {
-    if (this.input.keyDown('z')) {
-      this.undo();
-    }
   }
 
   if (this.input.keyDown('1')) {

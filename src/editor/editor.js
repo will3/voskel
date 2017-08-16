@@ -229,28 +229,23 @@ Editor.prototype.tick = function() {
 
   this.drawSelection();
 
-  var offsetCoord = null;
   if (this.input.keyDown('f')) {
-    offsetCoord = new THREE.Vector3(0, -1, 0);
+    this.applyOffset(new THREE.Vector3(0, -1, 0));
   }
   if (this.input.keyDown('r')) {
-    offsetCoord = new THREE.Vector3(0, 1, 0);
+    this.applyOffset(new THREE.Vector3(0, 1, 0));
   }
   if (this.input.keyDown('a')) {
-    offsetCoord = new THREE.Vector3(-1, 0, 0);
+    this.applyOffset(new THREE.Vector3(-1, 0, 0));
   }
   if (this.input.keyDown('d')) {
-    offsetCoord = new THREE.Vector3(1, 0, 0);
+    this.applyOffset(new THREE.Vector3(1, 0, 0));
   }
   if (this.input.keyDown('w')) {
-    offsetCoord = new THREE.Vector3(0, 0, -1);
+    this.applyOffset(new THREE.Vector3(0, 0, -1));
   }
   if (this.input.keyDown('s')) {
-    offsetCoord = new THREE.Vector3(0, 0, 1);
-  }
-
-  if (offsetCoord != null) {
-    this.applyOffset(offsetCoord);
+    this.applyOffset(new THREE.Vector3(0, 0, 1));
   }
 
   if (this.input.keyDown('1')) {

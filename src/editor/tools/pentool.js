@@ -57,8 +57,8 @@ PenTool.prototype.onClick = function(isClear) {
 
   if (!!coord) {
     if (this.blocks.getAtCoord(coord) !== selectedIndex) {
-      this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords([coord]), selectedIndex));
       this.editor.updateLastBlocks();
+      this.editor.runCommand(new SetCommand(this.blocks, this.reflectCoords([coord]), selectedIndex));
     }
   }
 };
